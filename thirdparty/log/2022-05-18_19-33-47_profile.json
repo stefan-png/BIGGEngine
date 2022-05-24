@@ -1,4 +1,0 @@
-[
-{"ph": "X", "pid": 68000, "tid": 1557270, "name": "BIGGEngine::Renderer::Renderer(BIGGEngine::ContextI *)", "cat": "renderer", "ts": 3125.832, "dur": 186145.232 },
-{"ph": "X", "pid": 68000, "tid": 1557270, "name": "BIGGEngine::App::App()", "cat": "app", "ts": 189463.136, "dur": 7276.912999999996 },
-{"ph": "X", "pid": 68000, "tid": 1557270, "name": "int main()->Init", "cat": "main", "ts": 337.877, "dur": 196433.01700000002 },
