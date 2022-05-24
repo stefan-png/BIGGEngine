@@ -1,0 +1,7 @@
+[
+{"ph": "X", "pid": 60440, "tid": 1186690, "name": "BIGGEngine::Renderer::Renderer(BIGGEngine::ContextI *)", "cat": "renderer", "ts": 1737.8719999999998, "dur": 98607.37 },
+{"ph": "X", "pid": 60440, "tid": 1186690, "name": "BIGGEngine::App::App()", "cat": "app", "ts": 100502.628, "dur": 23.37800000000445 },
+{"ph": "X", "pid": 60440, "tid": 1186690, "name": "int main()->Init", "cat": "main", "ts": 123.74900000000001, "dur": 100427.97099999999 },
+{"ph": "X", "pid": 60440, "tid": 1186690, "name": "int main()->Run", "cat": "main", "ts": 100571.155, "dur": 3367248.703 },
+{"ph": "X", "pid": 60440, "tid": 1186690, "name": "BIGGEngine::App::~App()", "cat": "app", "ts": 3467875.7180000003, "dur": 0.1259999997671457 },
+{"ph": "X", "pid": 60440, "tid": 1186690, "name": "int main()->Shutdown", "cat": "main", "ts": 3467875.396, "dur": 31.365999999977134 },
