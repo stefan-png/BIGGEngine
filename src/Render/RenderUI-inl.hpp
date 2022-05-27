@@ -385,12 +385,12 @@ private:
         updateKeyModifiers(e->m_mods);
 
         io.AddMouseButtonEvent((int)e->m_button, e->m_action == ActionEnum::Press);
-        return true;
+        return io.WantCaptureMouse;
     }
     bool handleScrollEvent(ScrollEvent* e) {
         ImGuiIO& io = ImGui::GetIO();
         io.AddMouseWheelEvent(e->m_delta.x, e->m_delta.y);
-        return true;
+        return io.WantCaptureMouse;
     }
     bool handleKeyEvent(KeyEvent* e) {
         ImGuiIO& io = ImGui::GetIO();
@@ -400,12 +400,12 @@ private:
             return false;
         }
         io.AddKeyEvent(KeyEnumToImGuiKey(e->m_key), e->m_action == ActionEnum::Press);
-        return true;
+        return io.WantCaptureKeyboard;
     }
     bool handleCharEvent(CharEvent* e) {
         ImGuiIO& io = ImGui::GetIO();
         io.AddInputCharacter(e->m_codepoint);
-        return true;
+        return io.WantCaptureKeyboard;
     }
     bool handleEarlyUpdateEvent(double delta) {
         BIGG_PROFILE_UI_FUNCTION;

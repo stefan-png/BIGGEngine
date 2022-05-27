@@ -4,6 +4,8 @@
 #include "../src/ContextImplGLFW.hpp"
 #include "../src/Render/RenderUI-inl.hpp"
 
+#include "../src/Script.hpp"
+
 #include <imgui.h>
 
 namespace BIGGEngine {
@@ -19,6 +21,10 @@ struct App {
         m_context.subscribe(1, [this](Event* e) -> bool {
             return handleEvents(e);
         });
+
+        // create test lua thing
+        ScriptFunctor scriptFunctor(luaL_newstate(), "../test/main.lua");
+        m_context.subscribe(-15, scriptFunctor);
     }
 
     ~App() {}
@@ -27,7 +33,7 @@ struct App {
 
         switch(event->m_type) {
             case Event::EventType::WindowCreate:
-                
+
                 return false;
             case Event::EventType::Update:
                 update(static_cast<UpdateEvent*>(event)->m_delta);
@@ -41,6 +47,14 @@ struct App {
             case Event::EventType::WindowShouldClose:
                 BIGG_LOG_INFO("closing window!");
                 return true;
+            case Event::EventType::MouseButton:
+            {
+                MouseButtonEvent* e = static_cast<MouseButtonEvent*>(event);
+                int mb = static_cast<int>(e->m_button);
+                int act = static_cast<int>(e->m_action);
+                int mods = static_cast<int>(e->m_mods);
+                BIGG_LOG_INFO("TEST mb: {} act: {} mods {:#06b}.", mb, act, mods);
+            }
             default:
                 return false;
         }
@@ -76,12 +90,50 @@ struct App {
 
 }   // namespace BIGGEngine
 
+#include <lua.hpp>
+
+int doLua() {
+
+    lua_State* L =luaL_newstate();
+    luaopen_base(L);
+
+    lua_WarnFunction myWarnFunction = [](void* ud, const char* msg, int tocont){
+        BIGG_LOG_WARN("{}", msg);
+    };
+
+    lua_setwarnf(L, myWarnFunction, nullptr);
+
+    int result = luaL_dofile(L, "../scripts/main.lua");
+
+    if(result != LUA_OK) {
+        const char* errorString = lua_tostring(L, -1);
+        BIGG_LOG_CRITICAL("{}", errorString);
+        return 1;
+    }
+
+    int type = lua_getglobal(L, "B");
+    BIGG_LOG_INFO("type of B is {}", type);
+    if(type == LUA_TNIL) {
+        // in luaconf.h lua_Number is float.
+        BIGG_LOG_WARN("this var is nil");
+        return 1;
+    }
+    if(!lua_isnumber(L, -1)) {
+        // in luaconf.h lua_Number is float.
+        BIGG_LOG_WARN("top of stack is not a number!");
+        return 1;
+    }
+
+
+    float a = lua_tonumber(L, -1);
+    BIGG_LOG_INFO("Number a is {}", a);
+    return 0;
+}
+
 int main() {
 
     using namespace BIGGEngine;
     App* app;
-    KeyEnum someKey = KeyEnum::Zero;
-
     int result;
     {
         BIGG_PROFILE_INIT_SCOPE("Init");

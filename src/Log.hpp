@@ -29,11 +29,11 @@
 /** @def BIGG_LOG_CRITICAL 
  * Log a critical message to @c std::cout. Formatted using @c spdlog */
 
-#define BIGG_LOG_TRACE(...) SPDLOG_LOGGER_TRACE(Log::m_appLogger, __VA_ARGS__)
-#define BIGG_LOG_DEBUG(...) SPDLOG_LOGGER_DEBUG(Log::m_appLogger, __VA_ARGS__)
-#define BIGG_LOG_INFO(...) SPDLOG_LOGGER_INFO(Log::m_appLogger, __VA_ARGS__)
-#define BIGG_LOG_WARN(...) SPDLOG_LOGGER_WARN(Log::m_appLogger, __VA_ARGS__)
-#define BIGG_LOG_CRITICAL(...) SPDLOG_LOGGER_CRITICAL(Log::m_appLogger, __VA_ARGS__)
+#define BIGG_LOG_TRACE(...) SPDLOG_LOGGER_TRACE(BIGGEngine::Log::m_appLogger, __VA_ARGS__)
+#define BIGG_LOG_DEBUG(...) SPDLOG_LOGGER_DEBUG(BIGGEngine::Log::m_appLogger, __VA_ARGS__)
+#define BIGG_LOG_INFO(...) SPDLOG_LOGGER_INFO(BIGGEngine::Log::m_appLogger, __VA_ARGS__)
+#define BIGG_LOG_WARN(...) SPDLOG_LOGGER_WARN(BIGGEngine::Log::m_appLogger, __VA_ARGS__)
+#define BIGG_LOG_CRITICAL(...) SPDLOG_LOGGER_CRITICAL(BIGGEngine::Log::m_appLogger, __VA_ARGS__)
 #define BIGG_ASSERT(_condition, _format, ...)                                           \
     for(;;) {                                                                           \
         if(!(_condition)) {                                                             \

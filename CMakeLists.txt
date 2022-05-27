@@ -31,7 +31,7 @@ target_link_libraries(linkingtest PRIVATE glm)
 #imgui
 
     # add glfw dep to imgui
-    set(IMGUI_SOURCE thirdparty/imgui/backends/imgui_impl_glfw.cpp thirdparty/imgui/imgui.cpp thirdparty/imgui/imgui_draw.cpp thirdparty/imgui/imgui_demo.cpp thirdparty/imgui/imgui_tables.cpp thirdparty/imgui/imgui_widgets.cpp)
+    set(IMGUI_SOURCE thirdparty/imgui/imgui.cpp thirdparty/imgui/imgui_draw.cpp thirdparty/imgui/imgui_demo.cpp thirdparty/imgui/imgui_tables.cpp thirdparty/imgui/imgui_widgets.cpp)
     add_library(imgui STATIC ${IMGUI_SOURCE})
 
     target_link_libraries(imgui PRIVATE 
@@ -82,27 +82,31 @@ target_link_libraries(linkingtest PRIVATE
 
 # new target: test
 
-add_library(application SHARED
+add_library(BIGGEngine SHARED
         src/ContextI.cpp
         src/ContextImplGLFW.cpp
         src/Renderer.cpp
-        src/NativeWindowHack.mm)
+        src/NativeWindowHack.mm
+        src/Script.cpp
+        src/Script.hpp)
 
-target_include_directories(application PRIVATE 
+target_include_directories(BIGGEngine PRIVATE
         thirdparty/spdlog/include 
         thirdparty/bgfx/include
         thirdparty/bx/include
         thirdparty/bimg/include
         thirdparty/glfw/include
-        thirdparty/glm)
+        thirdparty/glm
+        thirdparty/lua-5.4.4/include/)
 
-target_link_libraries(application PRIVATE
+target_link_libraries(BIGGEngine PRIVATE
         bxDebug
         bgfxDebug
         bimgDebug
         glfw
         glm
         spdlog
+        lua
         "-framework Cocoa"
         "-framework IOKit"
         "-framework QuartzCore"
@@ -110,15 +114,16 @@ target_link_libraries(application PRIVATE
         "-weak_framework MetalKit"
         "-framework CoreVideo")  # for the metal layer hack
 
-target_link_directories(application PRIVATE 
+target_link_directories(BIGGEngine PRIVATE
         thirdparty/bgfx/.build/osx-x64/bin/
-        thirdparty/spdlog/build/) 
+        thirdparty/spdlog/build/
+        thirdparty/lua-5.4.4/bin/)
 
-target_precompile_headers(application PRIVATE src/Core.hpp)
+target_precompile_headers(BIGGEngine PRIVATE src/Core.hpp)
 
 add_executable(test test/test.cpp)
-target_link_libraries(test PRIVATE 
-        application 
+target_link_libraries(test PRIVATE
+        BIGGEngine
         imgui)
 
 target_include_directories(test PRIVATE 
@@ -128,13 +133,15 @@ target_include_directories(test PRIVATE
         thirdparty/bimg/include
         thirdparty/glfw/include
         thirdparty/glm
-        thirdparty/imgui)
+        thirdparty/imgui
+        thirdparty/lua-5.4.4/include/)
 
 target_link_directories(test PRIVATE 
         thirdparty/bgfx/.build/osx-x64/bin/
-        thirdparty/spdlog/build/) 
+        thirdparty/spdlog/build/
+        thirdparty/lua-5.4.4/bin/)
 
-target_precompile_headers(test REUSE_FROM application)
+target_precompile_headers(test REUSE_FROM BIGGEngine)
       
 
 add_custom_target(cleanlogs rm log/*

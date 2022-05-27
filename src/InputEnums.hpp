@@ -155,17 +155,17 @@ inline int operator&(const ModsEnum& lhs, const ModsEnum& rhs) {
 }
 
 enum struct MouseButtonEnum {
-    One     = 0,
-    Two     = 1,
-    Three   = 2,
-    Four    = 3,
-    Five    = 4,
-    Six     = 5,
-    Seven   = 6,
-    Eight   = 7,
-    Left    = One,
-    Right   = Two,
-    Middle  = Three
+    Zero    = 0,
+    One     = 1,
+    Two     = 2,
+    Three   = 3,
+    Four    = 4,
+    Five    = 5,
+    Six     = 6,
+    Seven   = 7,
+    Left    = Zero,
+    Right   = One,
+    Middle  = Two
 };
 
 // TODO add joystick and gamepad
