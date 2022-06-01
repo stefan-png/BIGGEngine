@@ -61,24 +61,26 @@ namespace BIGGEngine {
             case Event::EventType::MouseButton:
             {
                 lua_getglobal(m_luaState, "mouseButtonCb");
-                if (lua_isnil(m_luaState, -1)) {
-                    BIGG_LOG_WARN("lua mouseButtonCb is nil!");
-                    lua_pop(m_luaState, -1); // pop the nil from lua_getglobal()
+                if (lua_isnil(m_luaState, -1) || !lua_isfunction(m_luaState, -1)) {
+                    BIGG_LOG_WARN("lua mouseButtonCb is not defined or is not a function!");
+                    lua_pop(m_luaState, 1); // pop the nil from lua_getglobal()
                     return false;
                 }
+
                 lua_pushnumber(m_luaState, static_cast<int>(static_cast<MouseButtonEvent *>(event)->m_button));
                 lua_pushnumber(m_luaState, static_cast<int>(static_cast<MouseButtonEvent *>(event)->m_action));
                 lua_pushnumber(m_luaState, static_cast<int>(static_cast<MouseButtonEvent *>(event)->m_mods));
 
+                // TODO change to lua_pcall
                 lua_call(m_luaState, 3, 1);
                 if (!lua_isboolean(m_luaState, -1)) {
                     // error! should have returned a bool!
                     BIGG_LOG_WARN("lua function 'update' didn't return a bool!");
-                    lua_pop(m_luaState, -1);
+                    lua_pop(m_luaState, 1);
                     return false;
                 }
                 bool ret = lua_toboolean(m_luaState, -1);
-                lua_pop(m_luaState, -1); // pop the return value from the stack
+                lua_pop(m_luaState, 1); // pop the return value from the stack
                 return ret;
             }
                 break;

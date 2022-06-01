@@ -351,12 +351,12 @@ private:
         m_data = std::make_unique<RenderUIData>(m_context);
 
         io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-        io.DisplaySize = m_context->getWindowSize();
+        io.DisplaySize = m_context->getWindowFramebufferSize();
         return false;
     }
     bool handleWindowSizeEvent() {
         ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = m_context->getWindowSize();
+        io.DisplaySize = m_context->getWindowFramebufferSize();
         // io.DisplayFramebufferScale = m_context->getWindowFramebufferSize() / m_context->getWindowSize();
         return false;
     }
@@ -423,7 +423,7 @@ private:
         // render the imgui things using bgfx
         ImGui::Render();
         ImDrawData* drawData = ImGui::GetDrawData();
-        uint32_t viewID = 0;
+        uint32_t viewID = 1;
 
 		// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 		int fb_width = (int)(drawData->DisplaySize.x * drawData->FramebufferScale.x);

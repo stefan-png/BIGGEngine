@@ -31,7 +31,7 @@ target_link_libraries(linkingtest PRIVATE glm)
 #imgui
 
     # add glfw dep to imgui
-    set(IMGUI_SOURCE thirdparty/imgui/imgui.cpp thirdparty/imgui/imgui_draw.cpp thirdparty/imgui/imgui_demo.cpp thirdparty/imgui/imgui_tables.cpp thirdparty/imgui/imgui_widgets.cpp)
+    set(IMGUI_SOURCE thirdparty/imgui/backends/imgui_impl_glfw.cpp thirdparty/imgui/imgui.cpp thirdparty/imgui/imgui_draw.cpp thirdparty/imgui/imgui_demo.cpp thirdparty/imgui/imgui_tables.cpp thirdparty/imgui/imgui_widgets.cpp)
     add_library(imgui STATIC ${IMGUI_SOURCE})
 
     target_link_libraries(imgui PRIVATE 
@@ -134,7 +134,8 @@ target_include_directories(test PRIVATE
         thirdparty/glfw/include
         thirdparty/glm
         thirdparty/imgui
-        thirdparty/lua-5.4.4/include/)
+        thirdparty/lua-5.4.4/include/
+        thirdparty/entt/src/)
 
 target_link_directories(test PRIVATE 
         thirdparty/bgfx/.build/osx-x64/bin/

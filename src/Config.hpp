@@ -14,6 +14,7 @@ const int8_t        g_rendererBeginPriority = -127;
 const int8_t        g_rendererEndPriority   = 127;
 const int8_t        g_renderUIBeginPriority = -126;
 const int8_t        g_renderUIEndPriority   = 126;
+const int8_t        g_renderMeshComponentsPriority  = 125;
 
 /// Context constants
 const unsigned int  g_maxWindowCount    = 20;

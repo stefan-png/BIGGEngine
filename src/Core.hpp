@@ -14,3 +14,4 @@
 #include "Profile.hpp"
 #include "InputEnums.hpp"
 #include "Events.hpp"
+#include "Components.hpp"

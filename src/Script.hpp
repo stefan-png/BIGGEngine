@@ -5,7 +5,6 @@
 #pragma once
 
 #include "Core.hpp"
-#define LUA_PATH_DEFAULT "../scripts/?.lua"
 #include <lua.hpp>
 
 namespace BIGGEngine {

@@ -263,7 +263,7 @@ int main() {
 
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, 0x939762ff);
     bgfx::setViewRect(0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    // bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    bgfx::setViewRect(1, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
@@ -338,15 +338,15 @@ int main() {
         if(counter % 60 == 0) {
             spdlog::info("Frame: {}", counter);
         }
+//
+//         ImGui_ImplGlfw_NewFrame();
+//         ImGui::NewFrame();
+//         ImGui::ShowDemoWindow();
+//         ImGui::Text("Hello, World!");
+//         ImGui::Render();
+//         render(ImGui::GetDrawData());
 
-        // ImGui_ImplGlfw_NewFrame();
-        // ImGui::NewFrame();
-        // ImGui::ShowDemoWindow();
-        // ImGui::Text("Hello, World!");
-        // ImGui::Render();
-        // render(ImGui::GetDrawData());
 
-/*
         const bx::Vec3 at = {0.0f, 0.0f, 0.0f};
         const bx::Vec3 eye = {0.0f, 0.0f, -5.0f};
         float view[16];
@@ -362,9 +362,9 @@ int main() {
         bgfx::setVertexBuffer(0, vertexBuffer);
         bgfx::setIndexBuffer(indexBuffer);
 
-        // bgfx::submit(0, program); 
-*/
-        bgfx::touch(0); //dummy draw call to view 0 so bg is drawn
+         bgfx::submit(0, program);
+
+//        bgfx::touch(0); //dummy draw call to view 0 so bg is drawn
         bgfx::frame();
 
         counter++;

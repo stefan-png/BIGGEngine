@@ -3,4 +3,3 @@ These are all compiled using shaders from .sc files.
 Profile = metal
 Platform = osx
 
-See thirdparty/bgfx/.build/osx-x64/test/ for more info on these shaders.
