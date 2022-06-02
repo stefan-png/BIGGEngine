@@ -102,11 +102,23 @@ public:
 
     bx::AllocatorI* getAllocator();
 
+    static void setContext(ContextI* instance) {
+        m_instance = instance;
+    }
+
+    // may return nullptr I guess
+    static ContextI* getContext() {
+        return m_instance;
+    }
+
+private:
     // Event State
     // Decleration order is important! m_allocator must be declared first, because of constructor.
     // in definition bx/inline/spscunboundedqueue.inl the template is automatically changed to T* (so Event* in this case).
     bx::AllocatorI* m_allocator;
     bx::SpScUnboundedQueueT<Event> m_queue;
     std::map<int8_t, EVENT_CB_TYPE> m_callbacks;
+
+    static inline ContextI* m_instance = nullptr;
 };  
 }   //namespace BIGGEngine

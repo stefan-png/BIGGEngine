@@ -7,9 +7,9 @@
 #include <glm/vec3.hpp>
 
 struct Transform {
-    glm::vec3 m_position;
-    glm::vec3 m_rotation;
-    glm::vec3 m_scale;
+    glm::vec3 position{0, 0, 0};
+    glm::vec3 rotation{0, 0, 0};
+    glm::vec3 scale{1, 1, 1};
 };
 struct ImplVertex {
     float x, y, z;

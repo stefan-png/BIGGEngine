@@ -80,12 +80,13 @@ struct App {
             return handleEvents(e);
         });
 
-        // create test lua thing
-        ScriptFunctor scriptFunctor(luaL_newstate(), "../test/main.lua");
-        m_context.subscribe(-15, scriptFunctor);
+        // this should add the script "main" to the registry and run the script once.
+        Scripting::registerScript("main", "../test/main.lua");
 
         const auto entity = m_registry.create();
         m_registry.emplace<Mesh>(entity);
+        m_registry.emplace<Transform>(entity);
+        m_registry.emplace<ScriptComponent>(entity, "main");
     }
 
     ~App() {}
@@ -154,26 +155,6 @@ struct App {
         ImGui::ShowDemoWindow();
         bgfx::touch(0);
         return;
-
-        static double counter = 0.0f;
-        counter+= delta;
-
-        const bx::Vec3 at = {0.0f, 0.0f, 0.0f};
-        const bx::Vec3 eye = {0.0f, 0.0f, -5.0f};
-        float view[16];
-        bx::mtxLookAt(view, eye, at);
-        float proj[16];
-        float aspectRatio = (float)720/(float)600;
-        bx::mtxProj(proj, 60.0f, aspectRatio, 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
-        bgfx::setViewTransform(0, &view, &proj);
-        float transform[16];
-        bx::mtxRotateXY(transform, counter, counter);
-        bgfx::setTransform(transform);
-
-        bgfx::setVertexBuffer(0, vertexBuffer);
-        bgfx::setIndexBuffer(indexBuffer);
-
-        bgfx::submit(0, program);
     }
 
     void shutdown() {

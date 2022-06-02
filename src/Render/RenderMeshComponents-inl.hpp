@@ -92,8 +92,8 @@ namespace BIGGEngine {
             static double counter = 0.0f;
             counter += event->m_delta;
 
-            auto view = m_registry.view<Mesh>();
-            for(const auto& [entity, mesh] : view.each()) {
+            auto view = m_registry.view<Mesh, Transform>();
+            for(const auto& [entity, mesh, transform] : view.each()) {
                 BIGG_PROFILE_RENDERER_SCOPE("foreach mesh");
 
                 {
@@ -105,12 +105,15 @@ namespace BIGGEngine {
 
                     bgfx::setViewTransform(viewID, glm::value_ptr(view), glm::value_ptr(proj));
 
-                    glm::mat4 rot = glm::mat4(1.0f);
+                    glm::mat4 trans = glm::mat4(1.0f);
                     glm::mat4 rot_ = glm::mat4(1.0f);
                     rot_ = glm::rotate(rot_, (float)counter * 0.25f, {0.0f, 0.0f, 1.0f});
                     glm::vec4 rotDir = glm::vec4(0.0f, 0.3f, 0.4f, 0.0f) * rot_;
-                    rot = glm::rotate(rot, (float)counter, glm::vec3(rotDir));
-                    bgfx::setTransform(glm::value_ptr(rot));
+                    trans = glm::rotate(trans, (float)counter, glm::vec3(rotDir));
+                    // TODO rotate by transform.rotation
+                    trans = glm::scale(trans, transform.scale);
+                    trans = glm::translate(trans, transform.position);
+                    bgfx::setTransform(glm::value_ptr(trans));
 
                 }
 //
