@@ -97,7 +97,8 @@ target_include_directories(BIGGEngine PRIVATE
         thirdparty/bimg/include
         thirdparty/glfw/include
         thirdparty/glm
-        thirdparty/lua-5.4.4/include/)
+        thirdparty/lua-5.4.4/include/
+        thirdparty/entt/src/)
 
 target_link_libraries(BIGGEngine PRIVATE
         bxDebug

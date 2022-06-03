@@ -113,17 +113,17 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowShouldCloseEvent* event = BX_NEW(ctx->m_allocator, WindowShouldCloseEvent);
-        ctx->m_queue.push(event);
+        WindowShouldCloseEvent* event = BX_NEW(ctx->getAllocator(), WindowShouldCloseEvent);
+        ctx->pushEvent(event);
 
         BIGG_GLFW_LOG_TRACE("Pushed window close event");
     });
     glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowSizeEvent* event = BX_NEW(ctx->m_allocator, WindowSizeEvent);
+        WindowSizeEvent* event = BX_NEW(ctx->getAllocator(), WindowSizeEvent);
         event->m_size = { width, height };
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
 
         ctx->pollEvents();  // propogate the event immediately
         BIGG_GLFW_LOG_TRACE("Pushed & polled window size event");
@@ -131,25 +131,25 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowFramebufferSizeEvent* event = BX_NEW(ctx->m_allocator, WindowFramebufferSizeEvent);
+        WindowFramebufferSizeEvent* event = BX_NEW(ctx->getAllocator(), WindowFramebufferSizeEvent);
         event->m_size = { width, height };
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed window frame size event");
     });
     glfwSetWindowContentScaleCallback(m_window, [](GLFWwindow* window, float xScale, float yScale){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowContentScaleEvent* event = BX_NEW(ctx->m_allocator, WindowContentScaleEvent);
+        WindowContentScaleEvent* event = BX_NEW(ctx->getAllocator(), WindowContentScaleEvent);
         event->m_scale = { xScale, yScale};
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed window content scale event");
     });
     glfwSetWindowPosCallback(m_window, [](GLFWwindow* window, int x, int y){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowPositionEvent* event = BX_NEW(ctx->m_allocator, WindowPositionEvent);
+        WindowPositionEvent* event = BX_NEW(ctx->getAllocator(), WindowPositionEvent);
         event->m_position = { x, y };
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
 
         ctx->pollEvents();  // propogate the event immediately
         BIGG_GLFW_LOG_TRACE("Pushed & polled window position event");
@@ -157,9 +157,9 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     glfwSetWindowIconifyCallback(m_window, [](GLFWwindow* window, int iconified){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowIconifyEvent* event = BX_NEW(ctx->m_allocator, WindowIconifyEvent);
+        WindowIconifyEvent* event = BX_NEW(ctx->getAllocator(), WindowIconifyEvent);
         event->m_iconified = iconified;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
 
         ctx->pollEvents();  // propogate the event immediately
         BIGG_GLFW_LOG_TRACE("Pushed & polled window iconify event");
@@ -167,9 +167,9 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow* window, int maximized){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowMaximizeEvent* event = BX_NEW(ctx->m_allocator, WindowMaximizeEvent);
+        WindowMaximizeEvent* event = BX_NEW(ctx->getAllocator(), WindowMaximizeEvent);
         event->m_maximized = maximized;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
 
         ctx->pollEvents();  // propogate the event immediately
         BIGG_GLFW_LOG_TRACE("Pushed & polled window maximize event");
@@ -177,9 +177,9 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     glfwSetWindowFocusCallback(m_window, [](GLFWwindow* window, int focus){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowFocusEvent* event = BX_NEW(ctx->m_allocator, WindowFocusEvent);
+        WindowFocusEvent* event = BX_NEW(ctx->getAllocator(), WindowFocusEvent);
         event->m_focused = focus;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
 
         ctx->pollEvents();  // propogate the event immediately
         BIGG_GLFW_LOG_TRACE("Pushed & polled window focus event");
@@ -187,28 +187,28 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     glfwSetWindowRefreshCallback(m_window, [](GLFWwindow* window){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        WindowRefreshEvent* event = BX_NEW(ctx->m_allocator, WindowRefreshEvent);
-        ctx->m_queue.push(event);
+        WindowRefreshEvent* event = BX_NEW(ctx->getAllocator(), WindowRefreshEvent);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed window refresh event");
     });
     // key callbacks
     glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        KeyEvent* event = BX_NEW(ctx->m_allocator, KeyEvent);
+        KeyEvent* event = BX_NEW(ctx->getAllocator(), KeyEvent);
         event->m_key = (KeyEnum)key;
         event->m_scancode = scancode;
         event->m_action = (ActionEnum)action;
         event->m_mods = (ModsEnum)mods;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed key event");
     });
     glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int codepoint){
         static GLFWContext* ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        CharEvent* event = BX_NEW(ctx->m_allocator, CharEvent);
+        CharEvent* event = BX_NEW(ctx->getAllocator(), CharEvent);
         event->m_codepoint = codepoint;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed char event");
     });
     // mouse callbacks
@@ -218,10 +218,10 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
         static glm::dvec2 lastMousePos;
         glm::dvec2 currentMousePos(x, y);
 
-        MousePositionEvent* event =  BX_NEW(ctx->m_allocator, MousePositionEvent);
+        MousePositionEvent* event =  BX_NEW(ctx->getAllocator(), MousePositionEvent);
         event->m_delta = currentMousePos - lastMousePos;
         event->m_mousePosition = currentMousePos;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
 
         lastMousePos.x = x;
         lastMousePos.y = y;
@@ -230,40 +230,40 @@ bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     glfwSetCursorEnterCallback(m_window, [](GLFWwindow* window, int entered) {
         static GLFWContext *const ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
 
-        MouseEnterEvent* event =  BX_NEW(ctx->m_allocator, MouseEnterEvent);
+        MouseEnterEvent* event =  BX_NEW(ctx->getAllocator(), MouseEnterEvent);
         event->m_entered = entered;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed mouse enter event");
     });
     glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods) {
         static GLFWContext *const ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
 
-        MouseButtonEvent* event =  BX_NEW(ctx->m_allocator, MouseButtonEvent);
+        MouseButtonEvent* event =  BX_NEW(ctx->getAllocator(), MouseButtonEvent);
         event->m_button = (MouseButtonEnum)button;
         event->m_action = (ActionEnum)action;
         event->m_mods = (ModsEnum)mods;
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed mouse button event");
     });
     // scroll callback
     glfwSetScrollCallback(m_window, [](GLFWwindow* window, double xOffset, double yOffset){
         static GLFWContext *const ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window));
         
-        ScrollEvent* event =  BX_NEW(ctx->m_allocator, ScrollEvent);
+        ScrollEvent* event =  BX_NEW(ctx->getAllocator(), ScrollEvent);
         event->m_delta = { xOffset, yOffset };
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed mouse scroll event");
     });
     // drop paths callback
     glfwSetDropCallback(m_window, [](GLFWwindow* window, int count, const char** paths) {
         static GLFWContext *const ctx = static_cast<GLFWContext*>(glfwGetWindowUserPointer(window)); 
 
-        DropPathEvent* event = BX_NEW(ctx->m_allocator, DropPathEvent);
+        DropPathEvent* event = BX_NEW(ctx->getAllocator(), DropPathEvent);
         event->m_paths.reserve(count);
         for(int i = 0; i < count; i++) {
             event->m_paths.emplace_back(paths[i]);
         }
-        ctx->m_queue.push(event);
+        ctx->pushEvent(event);
         BIGG_GLFW_LOG_TRACE("Pushed drop path event");
     });
     // post window size event
@@ -437,6 +437,10 @@ void GLFWContext::setWindowVisible(bool visible) {
 
 void GLFWContext::setClipboardString(std::string text) {
     glfwSetClipboardString(NULL, text.c_str());
+}
+
+ContextI* createInstance() {
+    return new GLFWContext();
 }
 
 }  // namespace BIGGEngine

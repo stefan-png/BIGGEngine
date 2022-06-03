@@ -8,10 +8,11 @@
 #include <string>
 #include <vector>
 
+#include "Components.hpp"
 #include "Config.hpp"
 #include "Debug.hpp"
+#include "ECS.hpp"
+#include "Events.hpp"
+#include "InputEnums.hpp"
 #include "Log.hpp"
 #include "Profile.hpp"
-#include "InputEnums.hpp"
-#include "Events.hpp"
-#include "Components.hpp"

@@ -4,12 +4,17 @@
 
 #include "Script.hpp"
 
+#define BIGG_PROFILE_SCRIPT_FUNCTION            _BIGG_PROFILE_CATEGORY_FUNCTION("script")
+#define BIGG_PROFILE_SCRIPT_SCOPE(_format, ...) _BIGG_PROFILE_CATEGORY_SCOPE("script", _format, ##__VA_ARGS__)
+
+
 namespace BIGGEngine {
 
     // ------------------------------------- Buffer ----------------------------
     Scripting::Buffer::Buffer() {}
 
     Scripting::Buffer::Buffer(void* data, size_t size) {
+        BIGG_PROFILE_INIT_FUNCTION;
         if(size <= 0) return;
         m_data = malloc(size);
         memcpy(this->m_data, data, size);
@@ -17,10 +22,12 @@ namespace BIGGEngine {
     }
 
     Scripting::Buffer::~Buffer(){
+        BIGG_PROFILE_SCRIPT_FUNCTION;
         free(m_data);
     }
 
     void Scripting::Buffer::push(const void* data, size_t size) {
+        BIGG_PROFILE_SCRIPT_FUNCTION;
         if (size <= 0) return;
 
         void *d = malloc(m_size + size);
@@ -36,7 +43,7 @@ namespace BIGGEngine {
     // --------------------------------- ScriptHandle ------------------------------------------------
 
     Scripting::ScriptHandle::ScriptHandle(std::string_view name, std::string_view filepath) : name(name), filepath(filepath) {
-
+        BIGG_PROFILE_SCRIPT_FUNCTION;
         lua_State* L = Scripting::getL();
 
         auto warnFunc = [](void* ud, const char* msg, int tocont) {
@@ -44,14 +51,14 @@ namespace BIGGEngine {
         };
         lua_setwarnf(L, warnFunc, nullptr);
 
-        // set lua global scriptName
-        lua_pushstring(L, name.data());
-        lua_setglobal(L, "BIGGScriptName");
-
         if(luaL_dostring(L, "package.path = package.path .. ';../scripts/?.lua'")) {
             lua_error(L);
         }
         if(luaL_dostring(L, "package.cpath = package.cpath .. ';../scripts/?.dyld'")) {
+            lua_error(L);
+        }
+        // require BIGGEngine in each script
+        if(luaL_dostring(L, "require(\"BIGGEngine\")")) {
             lua_error(L);
         }
 
@@ -65,23 +72,112 @@ namespace BIGGEngine {
         if(lua_dump(L, writer, &m_buffer, false)) {
             lua_error(L);
         }
+        /*
+        {
+            //   26 basic functions
+            // + 9 std libs (coroutine, debug, io, math, os, package, string, table, utf8)
+            // + 1 BIGGEngine
+            // = 36 global variables.
+            lua_createtable(L, 0, 36);
 
-        BIGG_LOG_DEBUG("Cached script {} path: {} size: {} bytes.", name, filepath, m_buffer.size());
+            auto pushBaseLibsIntoTable = [&L](const char *name) {
+                lua_pushstring(L, name);
+                lua_getglobal(L, name);
+                lua_settable(L, -3);
+            };
+            // basic funcs
+            pushBaseLibsIntoTable("_G");
+            pushBaseLibsIntoTable("_VERSION");
+            pushBaseLibsIntoTable("assert");
+            pushBaseLibsIntoTable("collectgarbage");
+            pushBaseLibsIntoTable("dofile");
+            pushBaseLibsIntoTable("error");
+            pushBaseLibsIntoTable("getmetatable");
+            pushBaseLibsIntoTable("ipairs");
+            pushBaseLibsIntoTable("load");
+            pushBaseLibsIntoTable("loadfile");
+            pushBaseLibsIntoTable("next");
+            pushBaseLibsIntoTable("pairs");
+            pushBaseLibsIntoTable("pcall");
+            pushBaseLibsIntoTable("print");
+            pushBaseLibsIntoTable("rawequal");
+            pushBaseLibsIntoTable("rawget");
+            pushBaseLibsIntoTable("rawlen");
+            pushBaseLibsIntoTable("rawset");
+            pushBaseLibsIntoTable("require");
+            pushBaseLibsIntoTable("select");
+            pushBaseLibsIntoTable("setmetatable");
+            pushBaseLibsIntoTable("tonumber");
+            pushBaseLibsIntoTable("tostring");
+            pushBaseLibsIntoTable("type");
+            pushBaseLibsIntoTable("warn");
+            pushBaseLibsIntoTable("xpcall");
 
-        // since the chunk is still on stack, call it.
+            // std libs
+            pushBaseLibsIntoTable("coroutine");
+            pushBaseLibsIntoTable("debug");
+            pushBaseLibsIntoTable("io");
+            pushBaseLibsIntoTable("math");
+            pushBaseLibsIntoTable("os");
+            pushBaseLibsIntoTable("package");
+            pushBaseLibsIntoTable("string");
+            pushBaseLibsIntoTable("table");
+            pushBaseLibsIntoTable("utf8");
+
+            pushBaseLibsIntoTable("BIGGEngine");
+        }
+         */
+        // this does the same thing probably.
+        lua_pushglobaltable(L);
+
+        // set script-specific data
+        // NOTE: _ENV table is at -1
+        lua_getfield(L, -1, "BIGGEngine"); // push _ENV.BIGGEngine to stack
+//        lua_getglobal(L, "BIGGEngine"); // push _ENV.BIGGEngine to stack
+
+        lua_pushstring(L, name.data());           // push new name
+        lua_setfield(L, -2, "ScriptName"); // pops name from stack, but keeps table
+
+        lua_createtable(L, 0, 0);       // reset fields which may have been changed by another script.
+        lua_setfield(L, -2, "Callbacks");  // to an empty table.
+        lua_createtable(L, 0, 0);
+        lua_setfield(L, -2, "Persistent");
+
+        lua_pop(L, 1);                         // pop table BIGGEngine
+
+        // NOTE: _ENV table is still at -1
+        lua_setupvalue(L, -2, 1);  // pops table so chunk is -1
+        BIGG_LOG_DEBUG("Cached script '{}' path: '{}' size: {} bytes.", name, filepath, m_buffer.size());
+
+        // NOTE: chunk is at -1
         // this function pops the function and pushes any return values.
         if(lua_pcall(L, 0, LUA_MULTRET, 0)) {
             lua_error(L);
         }
+
+        lua_getglobal(L, "BIGGEngine");
+        lua_getfield(L, -1, "Callbacks");
+        lua_getfield(L, -1, "Init");
+        if(!lua_isfunction(L, -1)) {
+            BIGG_LOG_WARN("no init function detected for script '{}'.", name);
+            lua_pop(L, 3); // pop BIGGEngine, Callbacks, Init
+            return;
+        }
+
+        if(lua_pcall(L, 0, 0, 0)) {
+            lua_error(L); // pop Init.
+        }
+        lua_pop(L, 2); // pop BIGGEngine, Callbacks.
+
     }
 
-    int Scripting::ScriptHandle::writer(lua_State* L, const void* p, size_t sz, void* ud) {
+    int Scripting::ScriptHandle::writer(lua_State* L, const void* p, size_t sz, void * ud) {
         Buffer* buf = static_cast<Buffer*>(ud);
         buf->push(p, sz);
         return 0;
     }
 
-    const char* Scripting::ScriptHandle::reader (lua_State *L, void *ud, size_t *size) {
+    const char* Scripting::ScriptHandle::reader (lua_State *L, void * ud, size_t *size) {
         Buffer* buf = static_cast<Buffer*>(ud);
 
         (void)L;  // not used
@@ -94,6 +190,7 @@ namespace BIGGEngine {
         if(L == nullptr) {
             L = luaL_newstate();
             luaL_openlibs(L);
+            luaL_requiref(L, "mylib", open_mylib, 1);
         }
         return L;
     }
@@ -104,94 +201,15 @@ namespace BIGGEngine {
     }
 
     void Scripting::shutdown() {
+        BIGG_PROFILE_SHUTDOWN_FUNCTION;
         lua_close(getL());
     }
 
-    Scripting::ScriptHandle Scripting::getScript(std::string_view name) {
-        // Returns the number of elements with key that compares equal to the specified argument key, which is either 1 or 0
-        if(m_registeredScripts.count(name)) {
-            return m_registeredScripts.at(name);
-        }
-        BIGG_LOG_WARN("Lua Script '{1}' is not registered. Call Scripting::registerScript(\"{1}\");", name);
-        return {nullptr, nullptr};
+    Scripting::Buffer* Scripting::getScriptBuffer(std::string_view name) {
+        // .count() Returns the number of elements with key that compares equal to the specified argument key, which is either 1 or 0
+        BIGG_ASSERT(m_registeredScripts.count(name), "Lua Script '{1}' is not registered. Call Scripting::registerScript(\"{1}\");", name.data())
+        return &m_registeredScripts.at(name).m_buffer;
     }
 
     ScriptComponent::ScriptComponent(std::string_view name) : m_name(name) {}
-/*
-
-    bool ScriptFunctor::operator()(BIGGEngine::Event *event) {
-        // call lua event callback function
-        switch(event->m_type) {
-            case Event::EventType::Update:
-                break;
-            case Event::EventType::Tick:
-                break;
-            case Event::EventType::WindowCreate:
-                break;
-            case Event::EventType::WindowDestroy:
-                break;
-            case Event::EventType::WindowShouldClose:
-                break;
-            case Event::EventType::WindowSize:
-                break;
-            case Event::EventType::WindowFramebufferSize:
-                break;
-            case Event::EventType::WindowContentScale:
-                break;
-            case Event::EventType::WindowPosition:
-                break;
-            case Event::EventType::WindowIconify:
-                break;
-            case Event::EventType::WindowMaximize:
-                break;
-            case Event::EventType::WindowFocus:
-                break;
-            case Event::EventType::WindowRefresh:
-                break;
-            case Event::EventType::Key:
-                break;
-            case Event::EventType::Char:
-                break;
-            case Event::EventType::MousePosition:
-                break;
-            case Event::EventType::MouseEnter:
-                break;
-            case Event::EventType::MouseButton:
-            {
-                lua_getglobal(m_luaState, "mouseButtonCb");
-                if (lua_isnil(m_luaState, -1) || !lua_isfunction(m_luaState, -1)) {
-                    BIGG_LOG_WARN("lua mouseButtonCb is not defined or is not a function!");
-                    lua_pop(m_luaState, 1); // pop the nil from lua_getglobal()
-                    return false;
-                }
-
-                lua_pushnumber(m_luaState, static_cast<int>(static_cast<MouseButtonEvent *>(event)->m_button));
-                lua_pushnumber(m_luaState, static_cast<int>(static_cast<MouseButtonEvent *>(event)->m_action));
-                lua_pushnumber(m_luaState, static_cast<int>(static_cast<MouseButtonEvent *>(event)->m_mods));
-
-                // TODO change to lua_pcall
-                lua_call(m_luaState, 3, 1);
-                if (!lua_isboolean(m_luaState, -1)) {
-                    // error! should have returned a bool!
-                    BIGG_LOG_WARN("lua function 'update' didn't return a bool!");
-                    lua_pop(m_luaState, 1);
-                    return false;
-                }
-                bool ret = lua_toboolean(m_luaState, -1);
-                lua_pop(m_luaState, 1); // pop the return value from the stack
-                return ret;
-            }
-                break;
-            case Event::EventType::Scroll:
-                break;
-            case Event::EventType::DropPath:
-                break;
-            default:
-                break;
-        }
-        return false;
-    }
-
-*/
-
 } // namespace BIGGEngine {

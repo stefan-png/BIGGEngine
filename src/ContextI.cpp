@@ -115,8 +115,24 @@ namespace BIGGEngine {
         }
     }
 
+
+    void ContextI::pushEvent(Event* event) {
+        m_queue.push(event);
+    }
+
     bx::AllocatorI* ContextI::getAllocator() {
         return m_allocator;
+    }
+
+    ContextI* ContextI::getInstance() {
+        if(m_instance == nullptr) {
+            m_instance = createInstance();
+        }
+        return m_instance;
+    }
+
+    void ContextI::shutdown() {
+        delete m_instance;
     }
     
 

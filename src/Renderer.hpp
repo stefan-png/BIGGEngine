@@ -7,15 +7,13 @@ namespace BIGGEngine {
 
 struct Renderer {
 
-    Renderer(ContextI* context);
+    Renderer();
     virtual ~Renderer();
 
 private:
     bool handleWindowCreateEvent();
     bool handleWindowSizeEvent(WindowSizeEvent* event);
     bool handleLateUpdateEvent();
-    
-    ContextI* m_context;
 };
 
 } // namespace BIGGEngine

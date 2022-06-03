@@ -95,21 +95,17 @@ public:
      */
     bool subscribe(int8_t priority, EVENT_CB_TYPE func);
 
-    /** 
-     * For each event, loops through each callback and invokes it until its handled
-     */
+    ///For each event, loops through each callback and invokes it until its handled
     void pollEvents();
 
+    /// Pushes one event to the end of the queue.
+    void pushEvent(Event* event);
+
+    /// Returns the context's allocator
     bx::AllocatorI* getAllocator();
 
-    static void setContext(ContextI* instance) {
-        m_instance = instance;
-    }
-
-    // may return nullptr I guess
-    static ContextI* getContext() {
-        return m_instance;
-    }
+    static ContextI* getInstance();
+    static void shutdown();
 
 private:
     // Event State
@@ -120,5 +116,9 @@ private:
     std::map<int8_t, EVENT_CB_TYPE> m_callbacks;
 
     static inline ContextI* m_instance = nullptr;
-};  
+};
+
+    /// must call return a pointer to derived ContextI object constructed with 'new'
+    /// eg. return new GLFWContext();
+    extern ContextI* createInstance();
 }   //namespace BIGGEngine

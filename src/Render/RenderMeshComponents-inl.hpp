@@ -16,9 +16,12 @@
 namespace BIGGEngine {
 
     struct RenderMeshComponents {
-        RenderMeshComponents(ContextI* context, entt::registry& registry) : m_context(context), m_registry(registry) {
+        RenderMeshComponents() {
             BIGG_PROFILE_INIT_FUNCTION;
-            bool subscribed = m_context->subscribe(g_renderMeshComponentsPriority, [this](Event* event) -> bool{
+
+            ContextI* ctx = ContextI::getInstance();
+
+            bool subscribed = ctx->subscribe(g_renderMeshComponentsPriority, [this](Event* event) -> bool{
                 switch(event->m_type) {
                     case Event::EventType::WindowCreate:
                         setup();
@@ -34,8 +37,6 @@ namespace BIGGEngine {
                 }
                 return false;
             });
-
-
 
             BIGG_ASSERT(subscribed, "priority level {} is not available!", g_renderMeshComponentsPriority);
 
@@ -92,7 +93,7 @@ namespace BIGGEngine {
             static double counter = 0.0f;
             counter += event->m_delta;
 
-            auto view = m_registry.view<Mesh, Transform>();
+            auto view = ECS::get().view<Mesh, Transform>();
             for(const auto& [entity, mesh, transform] : view.each()) {
                 BIGG_PROFILE_RENDERER_SCOPE("foreach mesh");
 
@@ -148,10 +149,6 @@ namespace BIGGEngine {
             BX_DELETE(allocator, fileReader);
             return mem;
         }
-
-    private:
-        ContextI* m_context;
-        entt::registry& m_registry;
     };
 
 

@@ -73,4 +73,6 @@ private:
     GLFWwindow* m_window = nullptr;
 
 };
+
+    ContextI* createInstance();
 }   // namespace BIGGEngine

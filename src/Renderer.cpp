@@ -16,10 +16,12 @@
 
 namespace BIGGEngine {
 
-Renderer::Renderer(ContextI* context) : m_context(context) {
+Renderer::Renderer() {
     BIGG_PROFILE_INIT_FUNCTION;
 
-    m_context->subscribe(g_rendererBeginPriority, [this](Event* event) -> bool {
+    ContextI* ctx = ContextI::getInstance();
+
+    ctx->subscribe(g_rendererBeginPriority, [this](Event* event) -> bool {
         switch(event->m_type) {
             case Event::EventType::WindowCreate:
                 return handleWindowCreateEvent();
@@ -30,7 +32,7 @@ Renderer::Renderer(ContextI* context) : m_context(context) {
         }
     });
 
-    m_context->subscribe(g_rendererEndPriority, [this](Event* event) -> bool {
+    ctx->subscribe(g_rendererEndPriority, [this](Event* event) -> bool {
         if(event->m_type == Event::EventType::Update) {
             return handleLateUpdateEvent();
         }
@@ -51,14 +53,16 @@ bool Renderer::handleWindowSizeEvent(WindowSizeEvent* event) {
 bool Renderer::handleWindowCreateEvent() {
     BIGG_PROFILE_RENDERER_FUNCTION;
 
+    ContextI* ctx = ContextI::getInstance();
+
     bgfx::PlatformData pd;
     pd.context = nullptr;
     pd.backBuffer = nullptr;
     pd.backBufferDS = nullptr;
-    pd.ndt = m_context->getNativeDisplayHandle();
-    pd.nwh = m_context->getNativeWindowHandle();
+    pd.ndt = ctx->getNativeDisplayHandle();
+    pd.nwh = ctx->getNativeWindowHandle();
 
-    glm::ivec2 fbSize = m_context->getWindowFramebufferSize();
+    glm::ivec2 fbSize = ctx->getWindowFramebufferSize();
 
     bgfx::Init init;
     init.platformData = pd;

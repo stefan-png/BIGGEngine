@@ -1,22 +1,29 @@
 BIGGEngine = {}
 
-BIGGEngine.MouseButton = {}
-BIGGEngine.MouseButton.Zero    = 0
-BIGGEngine.MouseButton.One     = 1
-BIGGEngine.MouseButton.Two     = 2
-BIGGEngine.MouseButton.Three   = 3
-BIGGEngine.MouseButton.Four    = 4
-BIGGEngine.MouseButton.Five    = 5
-BIGGEngine.MouseButton.Six     = 6
-BIGGEngine.MouseButton.Seven   = 7
-BIGGEngine.MouseButton.Left    = BIGGEngine.MouseButton.Zero
-BIGGEngine.MouseButton.Right   = BIGGEngine.MouseButton.One
-BIGGEngine.MouseButton.Middle  = BIGGEngine.MouseButton.Two
+-- Stuff which changes per script
+BIGGEngine.ScriptName = "NullScript"    -- String containing debug name of script. Set by C API.
+BIGGEngine.Callbacks = {}               -- Table of callbacks which is saved per script. Set by script.
 
-BIGGEngine.Action = {}
-BIGGEngine.Action.Release = 0
-BIGGEngine.Action.Press   = 1
-BIGGEngine.Action.Repeat  = 2
+-- Stuff which changes per component
+BIGGEngine.Persistent = {}              -- Table of persistent data which is saved per component. Set by script.
+
+BIGGEngine.MouseButtonEnum = {}
+BIGGEngine.MouseButtonEnum.Zero    = 0
+BIGGEngine.MouseButtonEnum.One     = 1
+BIGGEngine.MouseButtonEnum.Two     = 2
+BIGGEngine.MouseButtonEnum.Three   = 3
+BIGGEngine.MouseButtonEnum.Four    = 4
+BIGGEngine.MouseButtonEnum.Five    = 5
+BIGGEngine.MouseButtonEnum.Six     = 6
+BIGGEngine.MouseButtonEnum.Seven   = 7
+BIGGEngine.MouseButtonEnum.Left    = BIGGEngine.MouseButtonEnum.Zero
+BIGGEngine.MouseButtonEnum.Right   = BIGGEngine.MouseButtonEnum.One
+BIGGEngine.MouseButtonEnum.Middle  = BIGGEngine.MouseButtonEnum.Two
+
+BIGGEngine.ActionEnum = {}
+BIGGEngine.ActionEnum.Release = 0
+BIGGEngine.ActionEnum.Press   = 1
+BIGGEngine.ActionEnum.Repeat  = 2
 
 BIGGEngine.ModsEnum = {}
 BIGGEngine.ModsEnum.Shift     = 0x0001

@@ -145,17 +145,19 @@ public:
     bgfx::UniformHandle u_imageLodEnabled;
 
 public:
-    RenderUIData(ContextI* context) {
+    RenderUIData() {
+
         bgfx::RendererType::Enum type = bgfx::getRendererType();
+        bx::AllocatorI* allocator = ContextI::getInstance()->getAllocator();
         m_program = bgfx::createProgram(
-            bgfx::createShader(loadMem(context->getAllocator(), "../res/shaders/vs_ocornut_imgui.bin"))
-            , bgfx::createShader(loadMem(context->getAllocator(), "../res/shaders/fs_ocornut_imgui.bin"))
+            bgfx::createShader(loadMem(allocator, "../res/shaders/vs_ocornut_imgui.bin"))
+            , bgfx::createShader(loadMem(allocator, "../res/shaders/fs_ocornut_imgui.bin"))
             , true
         );
         u_imageLodEnabled = bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4);
         m_imageProgram = bgfx::createProgram(
-            bgfx::createShader(loadMem(context->getAllocator(), "../res/shaders/vs_imgui_image.bin"))
-            , bgfx::createShader(loadMem(context->getAllocator(), "../res/shaders/fs_imgui_image.bin"))
+            bgfx::createShader(loadMem(allocator, "../res/shaders/vs_imgui_image.bin"))
+            , bgfx::createShader(loadMem(allocator, "../res/shaders/fs_imgui_image.bin"))
             , true
         );
         m_layout
@@ -204,14 +206,14 @@ private:
 
 struct RenderUI {
 public:
-    RenderUI(ContextI* context) : m_context(context) {
+    RenderUI() {
         BIGG_PROFILE_INIT_FUNCTION;
 
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
 
         BIGG_ASSERT(io.BackendPlatformUserData == nullptr, "Already initialized a platform backend!")
-        io.BackendPlatformUserData = context;
+//        io.BackendPlatformUserData = context;
         io.BackendPlatformName = "BIGG Engine";
         io.BackendRendererName = "bgfx";
 
@@ -221,15 +223,16 @@ public:
         io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
     
         io.SetClipboardTextFn = [](void* userData, const char* string){
-            static_cast<ContextI*>(userData)->setClipboardString(string);
+            ContextI::getInstance()->setClipboardString(string);
         };
         io.GetClipboardTextFn = [](void* userData) -> const char*{
-            return static_cast<ContextI*>(userData)->getClipboardString().c_str();
+            return ContextI::getInstance()->getClipboardString().c_str();
         };
-        io.ClipboardUserData = context;
+
+        ContextI* ctx = ContextI::getInstance();
 
         // TODO cursors
-        bool subscribed = context->subscribe(g_renderUIBeginPriority, [this, &io](Event* event) -> bool {
+        bool subscribed = ctx->subscribe(g_renderUIBeginPriority, [this](Event* event) -> bool {
             switch(event->m_type) {
                 case Event::EventType::WindowCreate:
                     return handleWindowCreateEvent();
@@ -259,7 +262,7 @@ public:
         });
         BIGG_ASSERT(subscribed, "priority level {} is not available!", g_renderUIBeginPriority);
 
-        subscribed = context->subscribe(g_renderUIEndPriority, [this](Event* event) -> bool {
+        subscribed = ctx->subscribe(g_renderUIEndPriority, [this](Event* event) -> bool {
             if(event->m_type != Event::EventType::Update)
                 return false;
 
@@ -348,15 +351,15 @@ private:
 
         ImGuiIO& io = ImGui::GetIO();
         
-        m_data = std::make_unique<RenderUIData>(m_context);
+        m_data = std::make_unique<RenderUIData>();
 
         io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-        io.DisplaySize = m_context->getWindowFramebufferSize();
+        io.DisplaySize = ContextI::getInstance()->getWindowFramebufferSize();
         return false;
     }
     bool handleWindowSizeEvent() {
         ImGuiIO& io = ImGui::GetIO();
-        io.DisplaySize = m_context->getWindowFramebufferSize();
+        io.DisplaySize = ContextI::getInstance()->getWindowFramebufferSize();
         // io.DisplayFramebufferScale = m_context->getWindowFramebufferSize() / m_context->getWindowSize();
         return false;
     }
@@ -552,7 +555,6 @@ private:
     }
 
 private:
-    ContextI* m_context;
     std::unique_ptr<RenderUIData> m_data;
 };
 
