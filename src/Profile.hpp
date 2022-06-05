@@ -127,7 +127,7 @@ private:
 #define _BIGG_PROFILE_CATEGORY_FUNCTION(_category)              _BIGG_PROFILE_CATEGORY_NAME(__LINE__, _category, prettyFunction)
 #define _BIGG_PROFILE_CATEGORY_CUSTOM(_category, _format, ...)  _BIGG_PROFILE_CATEGORY_NAME(__LINE__, _category, fmt::format(_format, ##__VA_ARGS__))
 #define _BIGG_PROFILE_CATEGORY_SCOPE(_category, _format, ...)   _BIGG_PROFILE_CATEGORY_CUSTOM(_category, fmt::format("{} {}", prettyFunction, _format), ##__VA_ARGS__)
-// _BIGG_PROFILE_CATEGORY_SCOPE("run", "Event Type: {:s}",GET_EVENT_DEBUG_STRING(event))
+// _BIGG_PROFILE_CATEGORY_SCOPE("run", "Events Type: {:s}",GET_EVENT_DEBUG_STRING(event))
 
 //common categories
 #define BIGG_PROFILE_INIT_FUNCTION                  _BIGG_PROFILE_CATEGORY_FUNCTION("init")

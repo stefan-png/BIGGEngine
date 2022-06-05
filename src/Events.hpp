@@ -1,188 +1,227 @@
 #pragma once
 
+#include "Debug.hpp"
 #include "InputEnums.hpp"
+#include "Functor.hpp"
 
 #include <functional>
 #include <glm/vec2.hpp>
 
 #include <string>
 #include <vector>
+#include <map>
 
-/**
- * @def EVENT_CB_TYPE std::function<bool(Event*)>
- * A event callback has type @c std::function<bool(Event*)> @c.
- */
-#define EVENT_CB_TYPE std::function<bool(Event*)>
+//#define EVENT_CB_TYPE std::function<bool(Events*)>
+#define EVENT_CB_TYPE Functor<Events>
 
-/** 
- * @internal
- * @def DEFINE_EVENT_CONSTRUCTOR(_eventType) _eventType ## Event() : Event(Event::EventType::_eventType) {}
- * Utility macro to help define many Event subclasses. 
- */
-#define DEFINE_EVENT_CONSTRUCTOR(_eventType) _eventType ## Event() : Event(Event::EventType::_eventType) {}
+#define SETUP_EVENT(_eventType) _eventType ## Event() {} \
+    Events::EventType m_type = Events::EventType::_eventType;
+
+#define FOR_EACH_EVENT(expr, ...) \
+    expr(Update, ##__VA_ARGS__)\
+    expr(Tick, ##__VA_ARGS__) \
+    expr(WindowCreate, ##__VA_ARGS__) \
+    expr(WindowDestroy, ##__VA_ARGS__) \
+    expr(WindowShouldClose, ##__VA_ARGS__) \
+    expr(WindowSize, ##__VA_ARGS__) \
+    expr(WindowFramebufferSize, ##__VA_ARGS__) \
+    expr(WindowContentScale, ##__VA_ARGS__) \
+    expr(WindowPosition, ##__VA_ARGS__) \
+    expr(WindowIconify, ##__VA_ARGS__) \
+    expr(WindowMaximize, ##__VA_ARGS__) \
+    expr(WindowFocus, ##__VA_ARGS__) \
+    expr(WindowRefresh, ##__VA_ARGS__) \
+    expr(Key, ##__VA_ARGS__) \
+    expr(Char, ##__VA_ARGS__) \
+    expr(MousePosition, ##__VA_ARGS__) \
+    expr(MouseEnter, ##__VA_ARGS__) \
+    expr(MouseButton, ##__VA_ARGS__) \
+    expr(Scroll, ##__VA_ARGS__) \
+    expr(DropPath, ##__VA_ARGS__)
+
+// TODO joystick/gamepad input
 
 namespace BIGGEngine {
 
-/**
- * @struct Polymorphic Event type.  
- */
-struct Event {
+    struct Events {
+        /// Events Handling functions
+    public:
+        // define all EventTypes as an enum struct
+        enum struct EventType {
+#           define PUT_COMMA(T) T,
+            FOR_EACH_EVENT(PUT_COMMA)
+        };
 
-    /**
-     * @enum The type of event 
-     * 
-     */
-    enum struct EventType {
+        template<typename Event>
+        static bool subscribe(uint16_t priority, Functor<Event> functor) {
+            if (m_callbacks<Event>.count()) {
+                return false;
+            }
+            m_callbacks<Event>[priority] = functor;
+            return true;
+        }
 
-        Update,
-        Tick,
+        template<typename Event>
+        static bool unsubscribe(uint16_t priority) {
+            return m_callbacks<Event>.erase(priority);;
+        }
 
-        WindowCreate,
-        WindowDestroy,
-        WindowShouldClose,
-        WindowSize,
-        WindowFramebufferSize,
-        WindowContentScale,
-        WindowPosition,
-        WindowIconify,
-        WindowMaximize,
-        WindowFocus,
-        WindowRefresh,
+        template<typename Event>
+        static void setEvent(Event&& event) {
+            m_event<Event>(std::forward<Event>(event));
+            m_handled < Event > = false;
+        }
 
-        Key,
-        Char,
 
-        MousePosition,
-        MouseEnter,
-        MouseButton,
+        template<typename Event>
+        static void pollEvent() {
+            for(auto const& [priority, functor] : m_callbacks<Event>) {
+                m_handled<Event> = functor(m_event<Event>);
+                if(m_handled<Event>) break;
+            }
+        }
 
-        Scroll,
+        // defined later since it depends on UpdateEvent, ..., xxxEvent
+        static void pollEvents();
+        // reset Events system. Unsubscribe all callbacks, reset all events.
+        static void reset();
 
-        DropPath
+    private:
 
-        // TODO joystick/gamepad input
+        template<typename Event>
+        static std::map<uint16_t, Functor<Event>> m_callbacks;
+
+        template<typename Event>
+        static Event m_event;
+
+        template<typename Event>
+        static bool m_handled;
+
+    public:
+        Events() = delete;
     };
 
-    Event(EventType type) : m_type(type) {}
+    // Runtime Events
+    struct UpdateEvent {
+        SETUP_EVENT(Update)
 
-    EventType m_type;
-};
+        double m_delta;
+    };
 
-/**
- * @defgroup Events Events extending base class @ref Event
- * @{
- */
+    struct TickEvent {
+        SETUP_EVENT(Tick)
 
-// Runtime Events
-struct UpdateEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(Update)
-
-    double m_delta;
-};
-
-struct TickEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(Tick)
-
-    double m_delta;
-};
+        double m_delta;
+    };
 
 
 // Window Events
-struct WindowCreateEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowCreate)
+    struct WindowCreateEvent {
+        SETUP_EVENT(WindowCreate)
 
-    glm::ivec2 m_size;
-    std::string m_title;
-};
-struct WindowDestroyEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowDestroy)
-};
-struct WindowShouldCloseEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowShouldClose)
-};
-struct WindowSizeEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowSize)
+        glm::ivec2 m_size;
+        std::string m_title;
+    };
+    struct WindowDestroyEvent {
+        SETUP_EVENT(WindowDestroy)
+    };
+    struct WindowShouldCloseEvent {
+        SETUP_EVENT(WindowShouldClose)
+    };
+    struct WindowSizeEvent {
+        SETUP_EVENT(WindowSize)
 
-    glm::ivec2 m_size;
-};
-struct WindowFramebufferSizeEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowFramebufferSize)
+        glm::ivec2 m_size;
+    };
+    struct WindowFramebufferSizeEvent {
+        SETUP_EVENT(WindowFramebufferSize)
 
-    glm::ivec2 m_size;
-};
-struct WindowContentScaleEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowContentScale)
+        glm::ivec2 m_size;
+    };
+    struct WindowContentScaleEvent {
+        SETUP_EVENT(WindowContentScale)
 
-    glm::vec2 m_scale;
-};
-struct WindowPositionEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowPosition)
+        glm::vec2 m_scale;
+    };
+    struct WindowPositionEvent {
+        SETUP_EVENT(WindowPosition)
 
-    glm::ivec2 m_position;
-};
-struct WindowIconifyEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowIconify)
+        glm::ivec2 m_position;
+    };
+    struct WindowIconifyEvent {
+        SETUP_EVENT(WindowIconify)
 
-    bool m_iconified;
-};
-struct WindowMaximizeEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowMaximize)
+        bool m_iconified;
+    };
+    struct WindowMaximizeEvent {
+        SETUP_EVENT(WindowMaximize)
 
-    bool m_maximized;
-};
-struct WindowFocusEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowFocus)
+        bool m_maximized;
+    };
+    struct WindowFocusEvent {
+        SETUP_EVENT(WindowFocus)
 
-    bool m_focused;
-};
-struct WindowRefreshEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(WindowRefresh)
-};
+        bool m_focused;
+    };
+    struct WindowRefreshEvent {
+        SETUP_EVENT(WindowRefresh)
+    };
 
-struct KeyEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(Key)
+    struct KeyEvent {
+        SETUP_EVENT(Key)
 
-    KeyEnum m_key;
-    int m_scancode;
-    ActionEnum m_action;
-    ModsEnum m_mods;
-};
-struct CharEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(Char)
+        KeyEnum m_key;
+        int m_scancode;
+        ActionEnum m_action;
+        ModsEnum m_mods;
+    };
+    struct CharEvent {
+        SETUP_EVENT(Char)
 
-    unsigned int m_codepoint;
-};
+        unsigned int m_codepoint;
+    };
 
-struct MousePositionEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(MousePosition)
+    struct MousePositionEvent {
+        SETUP_EVENT(MousePosition)
 
-    glm::dvec2 m_mousePosition;
-    glm::dvec2 m_delta;
-}; 
-struct MouseEnterEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(MouseEnter)
+        glm::dvec2 m_mousePosition;
+        glm::dvec2 m_delta;
+    };
+    struct MouseEnterEvent {
+        SETUP_EVENT(MouseEnter)
 
-    bool m_entered;
-};
-struct MouseButtonEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(MouseButton)
+        bool m_entered;
+    };
+    struct MouseButtonEvent {
+        SETUP_EVENT(MouseButton)
 
-    MouseButtonEnum m_button;
-    ActionEnum m_action;
-    ModsEnum m_mods;
-};
+        MouseButtonEnum m_button;
+        ActionEnum m_action;
+        ModsEnum m_mods;
+    };
 
-struct ScrollEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(Scroll)
+    struct ScrollEvent {
+        SETUP_EVENT(Scroll)
 
-    glm::dvec2 m_delta;
-};
+        glm::dvec2 m_delta;
+    };
 
-struct DropPathEvent : public Event {
-    DEFINE_EVENT_CONSTRUCTOR(DropPath)
+    struct DropPathEvent {
+        SETUP_EVENT(DropPath)
 
-    std::vector<std::string> m_paths;
-};
-/** @} */   // defgroup Events
+        std::vector<std::string> m_paths;
+    };
 
-}   // namespace BIGGEngine
+    // define Events::pollEvents() after defining all event types.
+    void Events::pollEvents() {
+#       define POLL_EVENT(T) pollEvent<T ## Event>();
+        FOR_EACH_EVENT(POLL_EVENT)
+    }
+    void Events::reset() {
+#       define UNSUBSCRIBE_EVENT(T) m_callbacks<T ## Event>.clear();
+#       define SET_HANDLED(T, value) m_handled<T ## Event> = value;
+        FOR_EACH_EVENT(UNSUBSCRIBE_EVENT)
+        FOR_EACH_EVENT(SET_HANDLED, false)
+    }
+
+};  // namespace BIGGEngine

@@ -136,27 +136,27 @@ const std::map<ActionEnum, const char*> g_actionEnumDebugStrings = {
     { ActionEnum::Repeat,  "Repeat" }
 };
 
-const std::map<Event::EventType, const char*> g_eventTypeDebugStrings = {
-    { Event::EventType::Update,                "Update" },
-    { Event::EventType::Tick,                  "Tick" },
-    { Event::EventType::WindowCreate,          "WindowCreate" },
-    { Event::EventType::WindowDestroy,         "WindowDestroy" },
-    { Event::EventType::WindowShouldClose,     "WindowShouldClose" },
-    { Event::EventType::WindowSize,            "WindowSize" },
-    { Event::EventType::WindowFramebufferSize, "WindowFramebufferSize" },
-    { Event::EventType::WindowContentScale,    "WindowContentScale" },
-    { Event::EventType::WindowPosition,        "WindowPosition" },
-    { Event::EventType::WindowIconify,         "WindowIconify" },
-    { Event::EventType::WindowMaximize,        "WindowMaximize" },
-    { Event::EventType::WindowFocus,           "WindowFocus" },
-    { Event::EventType::WindowRefresh,         "WindowRefresh" },
-    { Event::EventType::Key,                   "Key" },
-    { Event::EventType::Char,                  "Char" },
-    { Event::EventType::MousePosition,         "MousePosition" },
-    { Event::EventType::MouseEnter,            "MouseEnter" },
-    { Event::EventType::MouseButton,           "MouseButton" },
-    { Event::EventType::Scroll,                "Scroll" },
-    { Event::EventType::DropPath,              "DropPath" }
+const std::map<Events::EventType, const char*> g_eventTypeDebugStrings = {
+    {Events::EventType::Update,                "Update" },
+    {Events::EventType::Tick,                  "Tick" },
+    {Events::EventType::WindowCreate,          "WindowCreate" },
+    {Events::EventType::WindowDestroy,         "WindowDestroy" },
+    {Events::EventType::WindowShouldClose,     "WindowShouldClose" },
+    {Events::EventType::WindowSize,            "WindowSize" },
+    {Events::EventType::WindowFramebufferSize, "WindowFramebufferSize" },
+    {Events::EventType::WindowContentScale,    "WindowContentScale" },
+    {Events::EventType::WindowPosition,        "WindowPosition" },
+    {Events::EventType::WindowIconify,         "WindowIconify" },
+    {Events::EventType::WindowMaximize,        "WindowMaximize" },
+    {Events::EventType::WindowFocus,           "WindowFocus" },
+    {Events::EventType::WindowRefresh,         "WindowRefresh" },
+    {Events::EventType::Key,                   "Key" },
+    {Events::EventType::Char,                  "Char" },
+    {Events::EventType::MousePosition,         "MousePosition" },
+    {Events::EventType::MouseEnter,            "MouseEnter" },
+    {Events::EventType::MouseButton,           "MouseButton" },
+    {Events::EventType::Scroll,                "Scroll" },
+    {Events::EventType::DropPath,              "DropPath" }
 
     // TODO joystick/gamepad input
 };

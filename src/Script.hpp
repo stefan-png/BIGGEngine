@@ -85,7 +85,7 @@ namespace BIGGEngine {
         lua_pop(L, 1);  // pop ScriptName.
 
         // START LAMBDA
-        auto callback = [scriptName](Event* event) {
+        auto callback = [scriptName](Events* event) {
             _BIGG_PROFILE_CATEGORY_SCOPE("script", "callback");
 
             // Get handle for access to its cache buffer.
@@ -128,7 +128,7 @@ namespace BIGGEngine {
                 // lua_setglobal(BIGGEngine.this);
 
                 // call lua function
-                if(event->m_type == Event::EventType::MouseButton) {
+                if(event->m_type == Events::EventType::MouseButton) {
                     // get lua fuction
                     if(lua_getglobal(L, "BIGGEngine") == LUA_TNIL) {
                         BIGG_LOG_WARN("lua BIGGEngine is nil!");

@@ -6,22 +6,22 @@ namespace BIGGEngine {
 
     ContextI::ContextI() : m_allocator(getDefaultAllocator()), m_queue(m_allocator) {
         BIGG_PROFILE_INIT_FUNCTION;
-        subscribe(g_contextPriority, [this](Event* event) -> bool{
+        subscribe(g_contextPriority, [this](Events* event) -> bool{
             // setup callback for events which the context must listen for
             switch(event->m_type) {
-                case Event::EventType::WindowCreate:
+                case Events::EventType::WindowCreate:
                     return handleWindowCreation(static_cast<WindowCreateEvent*>(event));
-                case Event::EventType::WindowDestroy:
+                case Events::EventType::WindowDestroy:
                     return handleWindowDestruction(static_cast<WindowDestroyEvent*>(event));
-                case Event::EventType::WindowSize:
+                case Events::EventType::WindowSize:
                     return handleWindowSize(static_cast<WindowSizeEvent*>(event));
-                case Event::EventType::WindowPosition:
+                case Events::EventType::WindowPosition:
                     return handleWindowPosition(static_cast<WindowPositionEvent*>(event));
-                case Event::EventType::WindowIconify:
+                case Events::EventType::WindowIconify:
                     return handleWindowIconified(static_cast<WindowIconifyEvent*>(event));
-                case Event::EventType::WindowMaximize:
+                case Events::EventType::WindowMaximize:
                     return handleWindowMaximized(static_cast<WindowMaximizeEvent*>(event));
-                case Event::EventType::WindowFocus:
+                case Events::EventType::WindowFocus:
                     return handleWindowFocus(static_cast<WindowFocusEvent*>(event));
                 default:
                     break;
@@ -98,9 +98,9 @@ namespace BIGGEngine {
 
     void ContextI::pollEvents() {
         BIGG_PROFILE_RUN_FUNCTION;
-        while(Event* event = m_queue.pop()) {
+        while(Events * event = m_queue.pop()) {
             {
-                BIGG_PROFILE_RUN_SCOPE("Event Type: {}", Debug::g_eventTypeDebugStrings.at(event->m_type));
+                BIGG_PROFILE_RUN_SCOPE("Events Type: {}", Debug::g_eventTypeDebugStrings.at(event->m_type));
                 for(auto const& [priority, callback] : m_callbacks) {
                     // loop through each callback until one handles the event (returns true)
 
@@ -116,7 +116,7 @@ namespace BIGGEngine {
     }
 
 
-    void ContextI::pushEvent(Event* event) {
+    void ContextI::pushEvent(Events* event) {
         m_queue.push(event);
     }
 

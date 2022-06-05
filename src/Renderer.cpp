@@ -21,19 +21,19 @@ Renderer::Renderer() {
 
     ContextI* ctx = ContextI::getInstance();
 
-    ctx->subscribe(g_rendererBeginPriority, [this](Event* event) -> bool {
+    ctx->subscribe(g_rendererBeginPriority, [this](Events* event) -> bool {
         switch(event->m_type) {
-            case Event::EventType::WindowCreate:
+            case Events::EventType::WindowCreate:
                 return handleWindowCreateEvent();
-            case Event::EventType::WindowSize:
+            case Events::EventType::WindowSize:
                 return handleWindowSizeEvent(static_cast<WindowSizeEvent*>(event));
             default:
                 return false;
         }
     });
 
-    ctx->subscribe(g_rendererEndPriority, [this](Event* event) -> bool {
-        if(event->m_type == Event::EventType::Update) {
+    ctx->subscribe(g_rendererEndPriority, [this](Events* event) -> bool {
+        if(event->m_type == Events::EventType::Update) {
             return handleLateUpdateEvent();
         }
         return false;

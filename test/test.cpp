@@ -39,7 +39,7 @@ struct App {
         ContextI* ctx = ContextI::getInstance();
         ctx->postWindowCreateEvent({720, 600}, "Best Window in the World");
 
-        ctx->subscribe(1, [this](Event* e) -> bool {
+        ctx->subscribe(1, [this](Events* e) -> bool {
             return handleEvents(e);
         });
 
@@ -56,21 +56,21 @@ struct App {
 
     ~App() {}
 
-    bool handleEvents(Event* event) {
+    bool handleEvents(Events* event) {
 
         switch(event->m_type) {
-            case Event::EventType::WindowCreate:
+            case Events::EventType::WindowCreate:
                 return false;
-            case Event::EventType::Update:
+            case Events::EventType::Update:
                 update(static_cast<UpdateEvent*>(event)->m_delta);
                 return false;
-            case Event::EventType::Tick:
+            case Events::EventType::Tick:
                 tick(static_cast<TickEvent*>(event)->m_delta);
                 return false;
-            case Event::EventType::DropPath:
+            case Events::EventType::DropPath:
                 printDropPath(static_cast<DropPathEvent*>(event));
                 return false;
-            case Event::EventType::WindowShouldClose:
+            case Events::EventType::WindowShouldClose:
                 return false;
             default:
                 return false;

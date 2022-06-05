@@ -21,15 +21,15 @@ namespace BIGGEngine {
 
             ContextI* ctx = ContextI::getInstance();
 
-            bool subscribed = ctx->subscribe(g_renderMeshComponentsPriority, [this](Event* event) -> bool{
+            bool subscribed = ctx->subscribe(g_renderMeshComponentsPriority, [this](Events* event) -> bool{
                 switch(event->m_type) {
-                    case Event::EventType::WindowCreate:
+                    case Events::EventType::WindowCreate:
                         setup();
                         return false;
-                    case Event::EventType::Update:
+                    case Events::EventType::Update:
                         update(static_cast<UpdateEvent*>(event));
                         return false;
-                    case Event::EventType::WindowShouldClose:
+                    case Events::EventType::WindowShouldClose:
                         shutdown();
                         return false;
                     default:

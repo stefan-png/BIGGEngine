@@ -91,7 +91,7 @@ int GLFWContext::run() {
     return EXIT_SUCCESS;   // return from main
 }
 
-// Event Callbacks to be overidden by the implementation
+// Events Callbacks to be overidden by the implementation
 bool GLFWContext::handleWindowCreation(WindowCreateEvent* event) {
     BIGG_PROFILE_GLFW_FUNCTION;
     // create glfw window

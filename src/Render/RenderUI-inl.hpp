@@ -232,29 +232,29 @@ public:
         ContextI* ctx = ContextI::getInstance();
 
         // TODO cursors
-        bool subscribed = ctx->subscribe(g_renderUIBeginPriority, [this](Event* event) -> bool {
+        bool subscribed = ctx->subscribe(g_renderUIBeginPriority, [this](Events* event) -> bool {
             switch(event->m_type) {
-                case Event::EventType::WindowCreate:
+                case Events::EventType::WindowCreate:
                     return handleWindowCreateEvent();
-                case Event::EventType::WindowSize:
+                case Events::EventType::WindowSize:
                     return handleWindowSizeEvent();
-                case Event::EventType::WindowFocus:
+                case Events::EventType::WindowFocus:
                     return handleWindowFocusEvent(static_cast<WindowFocusEvent*>(event));       
-                case Event::EventType::MouseEnter:
+                case Events::EventType::MouseEnter:
                     return handleMouseEnterEvent(static_cast<MouseEnterEvent*>(event));
-                case Event::EventType::MousePosition:
+                case Events::EventType::MousePosition:
                     return handleMousePositionEvent(static_cast<MousePositionEvent*>(event));
-                case Event::EventType::MouseButton:
+                case Events::EventType::MouseButton:
                     return handleMouseButtonEvent(static_cast<MouseButtonEvent*>(event));
-                case Event::EventType::Scroll:
+                case Events::EventType::Scroll:
                     return handleScrollEvent(static_cast<ScrollEvent*>(event));
-                case Event::EventType::Key:
+                case Events::EventType::Key:
                     return handleKeyEvent(static_cast<KeyEvent*>(event));
-                case Event::EventType::Char:
+                case Events::EventType::Char:
                     return handleCharEvent(static_cast<CharEvent*>(event));
-                case Event::EventType::Update:
+                case Events::EventType::Update:
                     return handleEarlyUpdateEvent(static_cast<UpdateEvent*>(event)->m_delta);
-                // case Event::EventType::Monitor:
+                // case Events::EventType::Monitor:
                 // TODO add monitor callback for "docking" branch of imgui
                 default:
                     return false;
@@ -262,8 +262,8 @@ public:
         });
         BIGG_ASSERT(subscribed, "priority level {} is not available!", g_renderUIBeginPriority);
 
-        subscribed = ctx->subscribe(g_renderUIEndPriority, [this](Event* event) -> bool {
-            if(event->m_type != Event::EventType::Update)
+        subscribed = ctx->subscribe(g_renderUIEndPriority, [this](Events* event) -> bool {
+            if(event->m_type != Events::EventType::Update)
                 return false;
 
             return handleLateUpdateEvent();
