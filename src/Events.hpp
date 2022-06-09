@@ -11,8 +11,8 @@
 #include <vector>
 #include <map>
 
-//#define EVENT_CB_TYPE std::function<bool(Events*)>
-#define EVENT_CB_TYPE Functor<Events>
+#define EVENT_CB_TYPE std::function<bool(Events*)>
+//#define EVENT_CB_TYPE EventFunctor
 
 #define SETUP_EVENT(_eventType) _eventType ## Event() {} \
     Events::EventType m_type = Events::EventType::_eventType;
@@ -53,7 +53,7 @@ namespace BIGGEngine {
         };
 
         template<typename Event>
-        static bool subscribe(uint16_t priority, Functor<Event> functor) {
+        static bool subscribe(uint16_t priority, EventFunctor<Event> functor) {
             if (m_callbacks<Event>.count()) {
                 return false;
             }
@@ -75,8 +75,8 @@ namespace BIGGEngine {
 
         template<typename Event>
         static void pollEvent() {
-            for(auto const& [priority, functor] : m_callbacks<Event>) {
-                m_handled<Event> = functor(m_event<Event>);
+            for(auto& [priority, functor] : m_callbacks<Event>) {
+                m_handled<Event> = functor.operator()(m_event<Event>);
                 if(m_handled<Event>) break;
             }
         }
@@ -89,7 +89,7 @@ namespace BIGGEngine {
     private:
 
         template<typename Event>
-        static std::map<uint16_t, Functor<Event>> m_callbacks;
+        static std::map<uint16_t, EventFunctor<Event>> m_callbacks;
 
         template<typename Event>
         static Event m_event;
