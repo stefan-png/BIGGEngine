@@ -27,6 +27,7 @@
 
 #include <type_traits>  // for all the SFINAE garbage
 #include "Log.hpp"      // for debug
+#include <functional>
 
 template<typename Ret, typename ... Args>
 struct Functor {
@@ -70,7 +71,7 @@ private:
 
 private:
     char lambda[sizeof(void*)];
-    funcPtrType funcPtr = nullptr;
+    void* funcPtr = nullptr;    // involves type punning a void* to function pointer
 
 public:
     // Null Function type
@@ -119,6 +120,9 @@ public:
             other.funcPtr = nullptr;
         }
     }
+
+    // move assignment
+    Functor& operator=(Functor&& other) = default;
 
     // destructor (not allowed to be templated so I save the destruction code during construction and call it here)
 //    ~Functor() {

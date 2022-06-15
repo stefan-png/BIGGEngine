@@ -2,20 +2,20 @@
 
 #include "Debug.hpp"
 #include "InputEnums.hpp"
-#include "Functor.hpp"
 
+//#include "Functor.hpp"
 #include <functional>
+
 #include <glm/vec2.hpp>
 
 #include <string>
 #include <vector>
 #include <map>
 
-#define EVENT_CB_TYPE std::function<bool(Events*)>
-//#define EVENT_CB_TYPE EventFunctor
+template<typename T>
+using functor_t = std::function<bool(T)>;
 
-#define SETUP_EVENT(_eventType) _eventType ## Event() {} \
-    Events::EventType m_type = Events::EventType::_eventType;
+#define ADD_TYPE_MEMBER(_eventType) static inline Events::EventType m_type = Events::EventType::_eventType;
 
 #define FOR_EACH_EVENT(expr, ...) \
     expr(Update, ##__VA_ARGS__)\
@@ -42,186 +42,127 @@
 // TODO joystick/gamepad input
 
 namespace BIGGEngine {
+namespace Events {
 
-    struct Events {
-        /// Events Handling functions
-    public:
-        // define all EventTypes as an enum struct
-        enum struct EventType {
+    void init();
+
+    // define all EventTypes as an enum struct
+    enum struct EventType {
 #           define PUT_COMMA(T) T,
-            FOR_EACH_EVENT(PUT_COMMA)
-        };
-
-        template<typename Event>
-        static bool subscribe(uint16_t priority, EventFunctor<Event> functor) {
-            if (m_callbacks<Event>.count()) {
-                return false;
-            }
-            m_callbacks<Event>[priority] = functor;
-            return true;
-        }
-
-        template<typename Event>
-        static bool unsubscribe(uint16_t priority) {
-            return m_callbacks<Event>.erase(priority);;
-        }
-
-        template<typename Event>
-        static void setEvent(Event&& event) {
-            m_event<Event>(std::forward<Event>(event));
-            m_handled < Event > = false;
-        }
-
-
-        template<typename Event>
-        static void pollEvent() {
-            for(auto& [priority, functor] : m_callbacks<Event>) {
-                m_handled<Event> = functor.operator()(m_event<Event>);
-                if(m_handled<Event>) break;
-            }
-        }
-
-        // defined later since it depends on UpdateEvent, ..., xxxEvent
-        static void pollEvents();
-        // reset Events system. Unsubscribe all callbacks, reset all events.
-        static void reset();
-
-    private:
-
-        template<typename Event>
-        static std::map<uint16_t, EventFunctor<Event>> m_callbacks;
-
-        template<typename Event>
-        static Event m_event;
-
-        template<typename Event>
-        static bool m_handled;
-
-    public:
-        Events() = delete;
+        FOR_EACH_EVENT(PUT_COMMA)
     };
+
+    template<typename Event>
+    bool subscribe(uint16_t priority, functor_t<Event> &&functor);
+
+    template<typename Event>
+    bool unsubscribe(uint16_t priority);
+
+    template<typename Event>
+    void setEvent(Event &&event);
+
+
+    template<typename Event>
+    void pollEvent();
+
+    // defined later since it depends on UpdateEvent, ..., xxxEvent
+    void pollEvents();
+
+    // reset Events system. Unsubscribe all callbacks, reset all events.
+    void reset();
+
+} // namespace Events
 
     // Runtime Events
     struct UpdateEvent {
-        SETUP_EVENT(Update)
-
         double m_delta;
+        ADD_TYPE_MEMBER(Update)
     };
 
     struct TickEvent {
-        SETUP_EVENT(Tick)
-
         double m_delta;
+        ADD_TYPE_MEMBER(Tick)
     };
-
 
 // Window Events
     struct WindowCreateEvent {
-        SETUP_EVENT(WindowCreate)
-
         glm::ivec2 m_size;
         std::string m_title;
+        ADD_TYPE_MEMBER(WindowCreate)
     };
     struct WindowDestroyEvent {
-        SETUP_EVENT(WindowDestroy)
+        ADD_TYPE_MEMBER(WindowDestroy)
     };
     struct WindowShouldCloseEvent {
-        SETUP_EVENT(WindowShouldClose)
+        ADD_TYPE_MEMBER(WindowShouldClose)
     };
     struct WindowSizeEvent {
-        SETUP_EVENT(WindowSize)
-
         glm::ivec2 m_size;
+        ADD_TYPE_MEMBER(WindowSize)
     };
     struct WindowFramebufferSizeEvent {
-        SETUP_EVENT(WindowFramebufferSize)
-
         glm::ivec2 m_size;
+        ADD_TYPE_MEMBER(WindowFramebufferSize)
     };
     struct WindowContentScaleEvent {
-        SETUP_EVENT(WindowContentScale)
-
         glm::vec2 m_scale;
+        ADD_TYPE_MEMBER(WindowContentScale)
     };
     struct WindowPositionEvent {
-        SETUP_EVENT(WindowPosition)
-
         glm::ivec2 m_position;
+        ADD_TYPE_MEMBER(WindowPosition)
     };
     struct WindowIconifyEvent {
-        SETUP_EVENT(WindowIconify)
-
         bool m_iconified;
+        ADD_TYPE_MEMBER(WindowIconify)
     };
     struct WindowMaximizeEvent {
-        SETUP_EVENT(WindowMaximize)
-
         bool m_maximized;
+        ADD_TYPE_MEMBER(WindowMaximize)
     };
     struct WindowFocusEvent {
-        SETUP_EVENT(WindowFocus)
-
         bool m_focused;
+        ADD_TYPE_MEMBER(WindowFocus)
     };
     struct WindowRefreshEvent {
-        SETUP_EVENT(WindowRefresh)
+        ADD_TYPE_MEMBER(WindowRefresh)
     };
 
     struct KeyEvent {
-        SETUP_EVENT(Key)
-
         KeyEnum m_key;
         int m_scancode;
         ActionEnum m_action;
         ModsEnum m_mods;
+        ADD_TYPE_MEMBER(Key)
     };
     struct CharEvent {
-        SETUP_EVENT(Char)
-
         unsigned int m_codepoint;
+        ADD_TYPE_MEMBER(Char)
     };
 
     struct MousePositionEvent {
-        SETUP_EVENT(MousePosition)
-
         glm::dvec2 m_mousePosition;
         glm::dvec2 m_delta;
+        ADD_TYPE_MEMBER(MousePosition)
     };
     struct MouseEnterEvent {
-        SETUP_EVENT(MouseEnter)
-
         bool m_entered;
+        ADD_TYPE_MEMBER(MouseEnter)
     };
     struct MouseButtonEvent {
-        SETUP_EVENT(MouseButton)
-
         MouseButtonEnum m_button;
         ActionEnum m_action;
         ModsEnum m_mods;
+        ADD_TYPE_MEMBER(MouseButton)
     };
 
     struct ScrollEvent {
-        SETUP_EVENT(Scroll)
-
         glm::dvec2 m_delta;
+        ADD_TYPE_MEMBER(Scroll)
     };
 
     struct DropPathEvent {
-        SETUP_EVENT(DropPath)
-
         std::vector<std::string> m_paths;
+        ADD_TYPE_MEMBER(DropPath)
     };
-
-    // define Events::pollEvents() after defining all event types.
-    void Events::pollEvents() {
-#       define POLL_EVENT(T) pollEvent<T ## Event>();
-        FOR_EACH_EVENT(POLL_EVENT)
-    }
-    void Events::reset() {
-#       define UNSUBSCRIBE_EVENT(T) m_callbacks<T ## Event>.clear();
-#       define SET_HANDLED(T, value) m_handled<T ## Event> = value;
-        FOR_EACH_EVENT(UNSUBSCRIBE_EVENT)
-        FOR_EACH_EVENT(SET_HANDLED, false)
-    }
-
 };  // namespace BIGGEngine

@@ -87,3 +87,84 @@ struct Log {
     }
 };
 }   // namespace BiggEngine
+
+//  ------------------------ GLM FORMATTERS ------------------------------------
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+#if GLM_HAS_TEMPLATE_ALIASES
+
+template<typename T>
+struct fmt::formatter<glm::tvec1<T>> : formatter<T> {
+    template<typename FormatContext>
+    constexpr auto format(const glm::tvec1<T> &t, FormatContext &ctx) -> decltype(ctx.out()) {
+        return fmt::formatter<T>::format(t.x, ctx);
+    }
+};  // glm::tvec1<T>
+template<typename T>
+struct fmt::formatter<glm::tvec2<T>> : formatter<T> {
+    template<typename FormatContext>
+    constexpr auto format(const glm::tvec2<T> &t, FormatContext &ctx) -> decltype(ctx.out()) {
+        fmt::formatter<T>::format(t.x, ctx);
+        fmt::format_to(ctx.out(), ", ");
+        return fmt::formatter<T>::format(t.y, ctx);
+    }
+};  // glm::tvec2<T>
+template<typename T>
+struct fmt::formatter<glm::tvec3<T>> : formatter<T> {
+    template<typename FormatContext>
+    constexpr auto format(const glm::tvec3<T> &t, FormatContext &ctx) -> decltype(ctx.out()) {
+        fmt::formatter<T>::format(t.x, ctx);
+        fmt::format_to(ctx.out(), ", ");
+        fmt::formatter<T>::format(t.y, ctx);
+        fmt::format_to(ctx.out(), ", ");
+        return fmt::formatter<T>::format(t.z, ctx);
+    }
+};  // glm::tvec3<T>
+template<typename T>
+struct fmt::formatter<glm::tvec4<T>> : formatter<T> {
+    template<typename FormatContext>
+    constexpr auto format(const glm::tvec4<T> &t, FormatContext &ctx) -> decltype(ctx.out()) {
+        fmt::formatter<T>::format(t.x, ctx);
+        fmt::format_to(ctx.out(), ", ");
+        fmt::formatter<T>::format(t.y, ctx);
+        fmt::format_to(ctx.out(), ", ");
+        fmt::formatter<T>::format(t.z, ctx);
+        fmt::format_to(ctx.out(), ", ");
+        return fmt::formatter<T>::format(t.w, ctx);
+    }
+};  // glm::tvec4<T>
+template<typename T>
+struct fmt::formatter<glm::tmat4x4<T>> : formatter<typename glm::tmat4x4<T>::col_type> {
+    template<typename FormatContext>
+    constexpr auto format(const glm::tmat4x4<T> &t, FormatContext &ctx) -> decltype(ctx.out()) {
+        using col_type = typename glm::tmat4x4<T>::col_type;
+        fmt::format_to(ctx.out(), "\n");
+        fmt::formatter<col_type>::format(t[0], ctx);
+        fmt::format_to(ctx.out(), "\n");
+        fmt::formatter<col_type>::format(t[1], ctx);
+        fmt::format_to(ctx.out(), "\n");
+        fmt::formatter<col_type>::format(t[2], ctx);
+        fmt::format_to(ctx.out(), "\n");
+        return fmt::formatter<col_type>::format(t[3], ctx);
+    }
+};  // glm::tmat4x4<T>
+template<typename T>
+struct fmt::formatter<glm::tquat<T>> : formatter<T> {
+    template<typename FormatContext>
+    constexpr auto format(const glm::tquat<T> &t, FormatContext &ctx) -> decltype(ctx.out()) {
+        fmt::formatter<T>::format(t.w, ctx);
+        fmt::format_to(ctx.out(), " + ");
+        fmt::formatter<T>::format(t.x, ctx);
+        fmt::format_to(ctx.out(), "i + ");
+        fmt::formatter<T>::format(t.y, ctx);
+        fmt::format_to(ctx.out(), "j + ");
+        fmt::formatter<T>::format(t.z, ctx);
+        return fmt::format_to(ctx.out(), "k");
+    }
+};  // glm::tquat<T>
+
+#endif  // GLM_HAS_TEMPLATE_ALIASES

@@ -83,12 +83,14 @@ target_link_libraries(linkingtest PRIVATE
 # new target: test
 
 add_library(BIGGEngine SHARED
-        src/ContextI.cpp
+        src/Context.cpp
         src/ContextImplGLFW.cpp
-        src/Renderer.cpp
+        src/Events.cpp
         src/NativeWindowHack.mm
-        src/Script.cpp
-        src/Script.hpp)
+        src/Render/RenderBase.cpp
+        src/Render/RenderUI.cpp
+#        src/Script.cpp
+        )
 
 target_include_directories(BIGGEngine PRIVATE
         thirdparty/spdlog/include 
@@ -107,6 +109,7 @@ target_link_libraries(BIGGEngine PRIVATE
         glfw
         glm
         spdlog
+        imgui
         lua
         "-framework Cocoa"
         "-framework IOKit"

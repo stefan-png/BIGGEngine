@@ -3,6 +3,7 @@
 #include "Events.hpp"
 
 #include <map>
+#include <typeindex>
 
 namespace BIGGEngine::Debug {
 
