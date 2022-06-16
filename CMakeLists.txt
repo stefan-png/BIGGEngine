@@ -89,7 +89,7 @@ add_library(BIGGEngine SHARED
         src/NativeWindowHack.mm
         src/Render/RenderBase.cpp
         src/Render/RenderUI.cpp
-#        src/Script.cpp
+        src/Script.cpp
         )
 
 target_include_directories(BIGGEngine PRIVATE
