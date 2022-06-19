@@ -123,7 +123,10 @@ private:
     Func m_func;
 };
 
-#define _BIGG_PROFILE_CATEGORY_NAME(_line, _category, _name) BIGGEngine::ScopedTimer timer##line([&, prettyFunction = BX_FUNCTION](double startTime, double delta) {BIGGEngine::Log::m_profileLogger->debug("\"cat\": \"{:s}\", \"ts\": {:f}, \"dur\": {:f}, \"name\": \"{:s}\"", _category, startTime*1e6, delta*1e6, _name);})
+#define _BIGG_CAT_1(x, y) x ## y
+#define _BIGG_CAT_2(x, y) _BIGG_CAT_2(x, y)
+
+#define _BIGG_PROFILE_CATEGORY_NAME(_line, _category, _name) BIGGEngine::ScopedTimer _BIGG_CAT_1(timer, _line)([&, prettyFunction = BX_FUNCTION](double startTime, double delta) {BIGGEngine::Log::m_profileLogger->debug("\"cat\": \"{:s}\", \"ts\": {:f}, \"dur\": {:f}, \"name\": \"{:s}\"", _category, startTime*1e6, delta*1e6, _name);})
 #define _BIGG_PROFILE_CATEGORY_FUNCTION(_category)              _BIGG_PROFILE_CATEGORY_NAME(__LINE__, _category, prettyFunction)
 #define _BIGG_PROFILE_CATEGORY_CUSTOM(_category, _format, ...)  _BIGG_PROFILE_CATEGORY_NAME(__LINE__, _category, fmt::format(_format, ##__VA_ARGS__))
 #define _BIGG_PROFILE_CATEGORY_SCOPE(_category, _format, ...)   _BIGG_PROFILE_CATEGORY_CUSTOM(_category, fmt::format("{} {}", prettyFunction, _format), ##__VA_ARGS__)

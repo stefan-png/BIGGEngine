@@ -90,6 +90,7 @@ add_library(BIGGEngine SHARED
         src/Render/RenderBase.cpp
         src/Render/RenderUI.cpp
         src/Script.cpp
+        scripts/LuaLog.cpp
         )
 
 target_include_directories(BIGGEngine PRIVATE

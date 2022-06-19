@@ -60,10 +60,11 @@ struct Log {
 
     static void init() {
 
-        spdlog::set_default_logger(spdlog::stdout_color_mt("BIGG"));
         m_appLogger     = spdlog::stdout_color_mt("APP");
         m_contextLogger = spdlog::stdout_color_mt("CTX");
-        spdlog::set_pattern("[%=4!n] [%T.%e] %s:%-3# %^[%l] %v %$");
+        m_scriptLogger = spdlog::stdout_color_mt("LUA");
+        spdlog::set_default_logger(m_appLogger);
+        spdlog::set_pattern("[%=3!n] [%T.%e] %s:%-3# %^[%l] %v %$");
         
 
         if(spdlog::get_level() >= spdlog::level::level_enum::info) {
@@ -81,9 +82,13 @@ struct Log {
     static inline std::shared_ptr<spdlog::logger> m_appLogger;
     static inline std::shared_ptr<spdlog::logger> m_contextLogger;
     static inline std::shared_ptr<spdlog::logger> m_profileLogger;
+    static inline std::shared_ptr<spdlog::logger> m_scriptLogger;
 
     static void setLevel(LogLevel level) {
         spdlog::set_level(static_cast<spdlog::level::level_enum>(level));
+    }
+    static LogLevel getLevel() {
+//        spdlog::set_level(static_cast<spdlog::level::level_enum>(level));
     }
 };
 }   // namespace BiggEngine

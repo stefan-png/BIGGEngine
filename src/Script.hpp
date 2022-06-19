@@ -25,7 +25,7 @@ namespace Scripting {
 
     void init();
     void shutdown();
-    void registerScript(entt::hashed_string name, std::string_view filepath);
+    void registerScript(entt::hashed_string name, std::string_view filepath, uint16_t subscribePriority);
 
 }   // namespace Scripting
 }; // namespace BIGGEngine

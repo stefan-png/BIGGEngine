@@ -28,12 +28,10 @@ struct App {
         RenderBase::init();
         RenderUI::init();
 
-        Scripting::init();
-
 
         // this should add the script "main" to the registry and run the script once.
-        Scripting::registerScript(entt::hashed_string{"test2"}, "../test/test2.lua");
-        Scripting::registerScript(entt::hashed_string{"main"}, "../test/main.lua");
+        Scripting::registerScript(entt::hashed_string{"test2"}, "../test/test2.lua", 101);
+        Scripting::registerScript(entt::hashed_string{"main"}, "../test/main.lua", 102);
 
         auto& reg = ECS::get();
         const auto entity = reg.create();
@@ -45,14 +43,12 @@ struct App {
         reg.emplace<ScriptComponent>(entity2, entt::hashed_string{"test2"});
 
         const auto entity3 = reg.create();
-        reg.emplace<ScriptComponent>(entity3, entt::hashed_string{"main"});
+        reg.emplace<ScriptComponent>(entity3, entt::hashed_string{"test2"});
     }
 
     ~App() {
         RenderUI::shutdown();
         Context::shutdown();
-
-        Scripting::shutdown();
     }
 
     void tick(double delta) {
