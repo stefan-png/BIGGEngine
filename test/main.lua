@@ -1,7 +1,7 @@
 function BIGGEngine.Init()
-    BIGGEngine.log("[lua] calling BIGGEngine.Init in script '%s'.",BIGGEngine.ScriptName);
+    BIGGEngine.log("calling BIGGEngine.Init in script '%s'.",BIGGEngine.ScriptName);
 
-    BIGGEngine.x = 5
+    BIGGEngine.x = -4
     BIGGEngine.y = -10
 end
 

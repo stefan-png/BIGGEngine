@@ -1,9 +1,33 @@
-# My Engine ALksdmas
+# BIGGEngine
 
-## Building
----------------------
-### Building glfw, glm, imgui, spdlog
+## C++ / Lua Game Engine made with the BIGG stack.
+
+### About
+
+This is a game engine built on the BIGG Stack (BGFX, Dear ImGui, glm, GLFW)
+which uses C++ for the main systems and Lua for scripting. The current features
+are:
+- Window / IO context system
+- Event System
+- Modular Rendering system (WIP)
+    - GUI using Dear ImGui
+- Entity component system using entt
+- Scripting using Lua (WIP)
+- Development tools:
+    - Logging
+    - Profiling
+    
+    
+### Building dependencies
+
+glfw, imgui, spdlog:
 - look at individual instructions. build a static lib.
+
+glm, entt
+- header only
+
+lua
+- download from lua.org
 
 ### Building bgfx, bx, bimg
 Use genie, bgfx's build tool, to build the libs. Optionally, build the tools. Maybe even build the examples. Genie is located inside bx/tools/bin/darwin/genie.
@@ -19,14 +43,14 @@ Use genie, bgfx's build tool, to build the libs. Optionally, build the tools. Ma
     - specify which targets to build ie `bx`, `bgfx`, `bimg`, `shaderc`, `texturec`, `texturev`, `geometryc`, `geometryv`
     - run `make help` inside `.build/projects/gmake-osx-x64`
 
-### Building tools (shaderc, geometryc, texturec)
+### Building bgfx tools (shaderc, geometryc, texturec)
 See the [bgfx API](https://bkaradzic.github.io/bgfx/tools.html) for more information on how to use tools.
 
 Basically, after running `$GENIE --with-shared-lib --with-tools --gcc=osx-x64 gmake`, I should have a folder `./build/projects/gmake-osx-x64`. Go into here and type `make help`. Follow the instructions to build each tool. Most importantly, set `config=debug`.
 
 For example:
-- shaderc: `make config=debug shaderc`  (1GB ish)
-- geometryc: `make config=debug geometryc`(idk yet)
+- shaderc: `make config=debug shaderc`
+- geometryc: `make config=debug geometryc`
 
 ### How to build a `.sc` shader
 - Dependencies
@@ -42,14 +66,11 @@ For example:
     - `bgfx_shader.sh`, `shaderlib.sh`, `varying.def.sc`
     - The first two are (should be) included in the `.sc`. The last file IDK what it is
 
-TL;DR use shaderc. try `shaderc --help`or something
+TL;DR use shaderc. try `shaderc --help`
 
+### CMAKE things
 
-# CMAKE things
-`cmake --build build/ --target clean`
-
-vs code runs something lke 
-`/usr/local/bin/cmake --build /Users/stefan/Documents/gitrepos/linkingtest/build --config Debug --target test --`
+clean Cmake files: `cmake --build build/ --target clean`
 
 # NOTES
 

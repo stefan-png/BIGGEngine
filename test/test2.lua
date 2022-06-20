@@ -3,7 +3,7 @@
 x = 100;    -- shared among all ScriptComponents with name 'test2'
 
 function BIGGEngine.Init()
-    BIGGEngine.log("[lua] calling BIGGEngine.Init in script '%s'.",BIGGEngine.ScriptName);
+    BIGGEngine.log("calling BIGGEngine.Init in script '%s'.",BIGGEngine.ScriptName);
 end
 
 function BIGGEngine.MouseButton(button, action, mods)
