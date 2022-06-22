@@ -33,6 +33,9 @@ struct App {
         Scripting::registerScript(entt::hashed_string{"test2"}, "../test/test2.lua", 101);
         Scripting::registerScript(entt::hashed_string{"main"}, "../test/main.lua", 102);
 
+        // TODO instead of registering script, ScriptComponent's constructor should do that
+        // automatically.
+
         auto& reg = ECS::get();
         const auto entity = reg.create();
         reg.emplace<Mesh>(entity);
