@@ -100,8 +100,9 @@ target_include_directories(BIGGEngine PRIVATE
         thirdparty/bimg/include
         thirdparty/glfw/include
         thirdparty/glm
-        thirdparty/lua-5.4.4/include/
-        thirdparty/entt/src/)
+        thirdparty/lua-5.4.4/include
+        thirdparty/entt/src
+        thirdparty/recursive-variant/include)
 
 target_link_libraries(BIGGEngine PRIVATE
         bxDebug
@@ -139,8 +140,9 @@ target_include_directories(test PRIVATE
         thirdparty/glfw/include
         thirdparty/glm
         thirdparty/imgui
-        thirdparty/lua-5.4.4/include/
-        thirdparty/entt/src/)
+        thirdparty/lua-5.4.4/include
+        thirdparty/entt/src
+        thirdparty/recursive-variant/include)
 
 target_link_directories(test PRIVATE 
         thirdparty/bgfx/.build/osx-x64/bin/
