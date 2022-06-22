@@ -8,13 +8,68 @@
 
 #include <utility> // for helper functions
 
-#include <string> // for debugging log messages
+#include <string>
+#include <vector>
+#include <variant>
 
 namespace BIGGEngine {
 namespace Scripting {
 namespace {
 
-    // forward declarations
+    // per-component save state
+    struct table_object;
+
+    using table_value = std::pair<std::string, std::variant<
+            lua_Integer,
+            lua_Number,
+            int,
+            std::string,
+            table_object>>;
+
+    struct table_object : public std::vector<table_value> {
+        using std::vector<table_value>::vector;
+    };
+
+    bool isDefaultName(const char* s) {
+        return
+                strcmp(s, "_G") == 0 ||
+                strcmp(s, "_VERSION") == 0 ||
+                strcmp(s, "assert") == 0 ||
+                strcmp(s, "collectgarbage") == 0 ||
+                strcmp(s, "dofile") == 0 ||
+                strcmp(s, "error") == 0 ||
+                strcmp(s, "getmetatable") == 0 ||
+                strcmp(s, "ipairs") == 0 ||
+                strcmp(s, "load") == 0 ||
+                strcmp(s, "loadfile") == 0 ||
+                strcmp(s, "next") == 0 ||
+                strcmp(s, "pairs") == 0 ||
+                strcmp(s, "pcall") == 0 ||
+                strcmp(s, "print") == 0 ||
+                strcmp(s, "rawequal") == 0 ||
+                strcmp(s, "rawget") == 0 ||
+                strcmp(s, "rawlen") == 0 ||
+                strcmp(s, "rawset") == 0 ||
+                strcmp(s, "require") == 0 ||
+                strcmp(s, "select") == 0 ||
+                strcmp(s, "setmetatable") == 0 ||
+                strcmp(s, "tonumber") == 0 ||
+                strcmp(s, "tostring") == 0 ||
+                strcmp(s, "type") == 0 ||
+                strcmp(s, "warn") == 0 ||
+                strcmp(s, "xpcall") == 0 ||
+                strcmp(s, "coroutine") == 0 ||
+                strcmp(s, "debug") == 0 ||
+                strcmp(s, "io") == 0 ||
+                strcmp(s, "math") == 0 ||
+                strcmp(s, "os") == 0 ||
+                strcmp(s, "package") == 0 ||
+                strcmp(s, "string") == 0 ||
+                strcmp(s, "table") == 0 ||
+                strcmp(s, "utf8") == 0 ||
+                strcmp(s, "BIGGEngine") == 0;
+    }
+
     struct Buffer {
         Buffer() = default;
         Buffer(void* data, size_t size) {
@@ -74,7 +129,7 @@ namespace {
         entt::hashed_string::hash_type name;      // name to be registered
         Buffer m_buffer;            // buffer for caching the script.
         lua_State* m_luaState = nullptr;
-
+        table_object m_globals; // initial state
     };
 
     // global state
@@ -448,6 +503,74 @@ namespace {
         return 1;
     }
 
+    void traverseTable(lua_State* L, int t, table_object& table, int depth = 0) {
+        /* table is in the stack at index 't' */
+        lua_pushnil(L);  /* first key */
+        int sum = 0;
+        while (lua_next(L, t-1) != 0) {
+            /* uses 'key' (at index -2) and 'value' (at index -1) */
+
+            const char* key;
+            if(lua_isinteger(L, -2)) {
+                int intkey = luaL_checkinteger(L, -2);
+                key = std::to_string(intkey).c_str();
+            } else {
+                key = luaL_checkstring(L, -2);
+            }
+            if(depth == 0 && isDefaultName(key)) {
+                lua_pop(L, 1);
+                continue;
+            }
+
+            if(lua_isboolean(L, -1)) {
+                table.emplace_back(key, lua_toboolean(L, -1));
+            }
+            else if(lua_isinteger(L, -1)) {
+                table.emplace_back(key, lua_tointeger(L, -1));
+            }
+            else if(lua_isnumber(L, -1)) {
+                table.emplace_back(key, lua_tonumber(L, -1));
+            } else if(lua_isstring(L, -1)) {
+                table.emplace_back(key, lua_tostring(L, -1));
+            } else if(lua_istable(L, -1)) {
+                table.emplace_back(key, table_object{});
+                traverseTable(L, -1, reinterpret_cast<table_object &>(table.back().second), depth + 1);
+            } else {
+                BIGG_LOG_WARN("{} = invalid type {}.", key, lua_typename(L, lua_type(L, -1)));
+            }
+
+
+            sum++;
+
+            /* removes 'value'; keeps 'key' for next iteration */
+            lua_pop(L, 1);
+        }
+        BIGG_LOG_INFO("Total non-default globals is {}.", sum);
+    }
+
+    void printTable(table_object t, int depth = 0) {
+        for(auto& v: t) {
+            std::visit([&v, depth](auto&& arg){
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr(std::is_same_v<T, table_object>) {
+                    BIGG_LOG_INFO("{} table {} {{", std::string(depth*4, ' '), v.first);
+                    printTable(arg, depth + 1);
+                    BIGG_LOG_INFO("{} }}", std::string(depth*4, ' '));
+                } else if constexpr(std::is_same_v<T, int>) {
+                    BIGG_LOG_INFO("{} bool {} = {}", std::string(depth*4, ' '), v.first, (arg?"true":"false"));
+                } else if constexpr(std::is_same_v<T, lua_Integer>) {
+                    BIGG_LOG_INFO("{} int {} = {}", std::string(depth*4, ' '), v.first, arg);
+                } else if constexpr(std::is_same_v<T, lua_Number>) {
+                    BIGG_LOG_INFO("{} double {} = {}", std::string(depth*4, ' '), v.first, arg);
+                } else if constexpr(std::is_same_v<T, std::string>) {
+                    BIGG_LOG_INFO("{} string {} = {}", std::string(depth*4, ' '), v.first, arg);
+                } else {
+                    BIGG_LOG_WARN("{} unknown {}!", std::string(depth*4, ' '), v.first);
+                }
+            }, v.second);
+        }
+    }
+
     // Script Handle implementation
 
     ScriptHandle::ScriptHandle(entt::hashed_string name, std::string_view filepath, uint16_t subscribePriority)
@@ -466,7 +589,7 @@ namespace {
         lua_pop(m_luaState, 1); // pop the requiref.
 
         auto warnFunc = [](void *, const char *msg, int) {
-            BIGG_LOG_WARN("{}", msg);
+            BIGG_LOG_WARN(msg);
         };
 
         lua_setwarnf(m_luaState, static_cast<lua_WarnFunction>(warnFunc), nullptr);
@@ -477,9 +600,10 @@ namespace {
             lua_error(m_luaState);
         }
         // Does NOT pop the Lua function off the stack.
-        if (lua_dump(m_luaState, writer, &m_buffer, false)) {
-            lua_error(m_luaState);
-        }
+//        if (lua_dump(m_luaState, writer, &m_buffer, false)) {
+//            lua_error(m_luaState);
+//        }
+//        BIGG_LOG_DEBUG("Cached script '{}' path: '{}' size: {} bytes.", name, filepath, m_buffer.size());
         } // BIGG_PROFILE_SCRIPT_SCOPE("setup member vars {}", name.data());
 
 
@@ -491,12 +615,6 @@ namespace {
         lua_setfield(m_luaState, -2, "ScriptName"); // pops name from stack, but keeps table BIGGEngine
 
         lua_pop(m_luaState, 1);                         // pop table _ENV.BIGGEngine
-
-        // must set the chunk's first upvalue to some environment
-
-        // NOTE: _ENV table from lua_pushglobaltable is still at -1
-        lua_setupvalue(m_luaState, -2, 1);  // pops table so chunk is -1
-        BIGG_LOG_DEBUG("Cached script '{}' path: '{}' size: {} bytes.", name, filepath, m_buffer.size());
 
         // NOTE: chunk is at -1
         // this function pops the function and pushes any return values.
@@ -563,11 +681,17 @@ namespace {
             Events::subscribe<MouseButtonEvent>(subscribePriority, callback);
 
             lua_pop(m_luaState, 1); // pop MouseButton
-            return;
         }
 
         // TODO repeat for all other callbacks
         lua_pop(m_luaState, 1); // pop BIGGEngine
+
+        // get global variables and create a template table_object to save per-component
+        lua_pushglobaltable(m_luaState);
+
+        traverseTable(m_luaState, -1, m_globals);
+
+        printTable(m_globals);
     }
 
     ScriptHandle::~ScriptHandle() {

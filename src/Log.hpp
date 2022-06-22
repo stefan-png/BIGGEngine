@@ -64,7 +64,7 @@ struct Log {
         m_contextLogger = spdlog::stdout_color_mt("CTX");
         m_scriptLogger = spdlog::stdout_color_mt("LUA");
         spdlog::set_default_logger(m_appLogger);
-        spdlog::set_pattern("[%=3!n] [%T.%e] %s:%-3# %^[%l] %v %$");
+        spdlog::set_pattern("[%=3!n] [%T.%e] %10s:%-3# %^[%l] %v %$");
         
 
         if(spdlog::get_level() >= spdlog::level::level_enum::info) {

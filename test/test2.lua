@@ -8,8 +8,8 @@ end
 
 function BIGGEngine.MouseButton(button, action, mods)
     if action == BIGGEngine.ActionEnum.Press then
-        x = x + 1
-        BIGGEngine.log("mouse button %d pressed in script '%s'. x = %d", button, BIGGEngine.ScriptName, x);
+        x = x + 1.1
+        BIGGEngine.log("mouse button %d pressed in script '%s'. x = %.1f", button, BIGGEngine.ScriptName, x);
     end
     return false
 end
