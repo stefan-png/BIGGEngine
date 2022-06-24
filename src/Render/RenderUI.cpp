@@ -3,6 +3,8 @@
 #include "../Core.hpp"
 #include "../Context.hpp"
 
+#include "RenderUtils.hpp"
+
 #include <imgui.h>
 #include <bgfx/bgfx.h>
 
@@ -11,9 +13,6 @@
 #include <glm/gtc/matrix_transform.hpp> // for glm::ortho()
 #include <glm/gtc/type_ptr.hpp>         // for glm::value_ptr() (convert mat4 to float[16])
 
-// for reading shader from disk
-#include <bx/file.h>
-#include <bx/readerwriter.h>
 
 #define BIGG_PROFILE_UI_FUNCTION            _BIGG_PROFILE_CATEGORY_FUNCTION("ui")
 #define BIGG_PROFILE_UI_SCOPE(_format, ...) _BIGG_PROFILE_CATEGORY_SCOPE("ui", _format, ##__VA_ARGS__)
@@ -193,18 +192,6 @@ namespace {
         // io.Fonts->AddFontFromFileTTF("../res/fonts/Arial.ttf", 18);
     }
 
-    const bgfx::Memory* loadMem(bx::AllocatorI* allocator, const char* filepath) {
-        bx::FileReaderI* fileReader = BX_NEW(allocator, bx::FileReader);
-        BIGG_ASSERT(bx::open(fileReader, filepath), "Failed to load {}", filepath);
-        uint32_t size = (uint32_t)bx::getSize(fileReader);
-        const bgfx::Memory* mem = bgfx::alloc(size+1);
-        bx::read(fileReader, mem->data, size, bx::ErrorAssert{});
-        bx::close(fileReader);
-        mem->data[mem->size-1] = '\0';
-        BX_DELETE(allocator, fileReader);
-        return mem;
-    }
-
     struct RenderUIData {
     public:
         bgfx::VertexLayout  m_layout;
@@ -219,14 +206,14 @@ namespace {
             bgfx::RendererType::Enum type = bgfx::getRendererType();
             bx::AllocatorI* allocator = Context::getAllocator();
             m_program = bgfx::createProgram(
-                    bgfx::createShader(loadMem(allocator, "../res/shaders/vs_ocornut_imgui.bin"))
-                    , bgfx::createShader(loadMem(allocator, "../res/shaders/fs_ocornut_imgui.bin"))
+                    bgfx::createShader(RenderUtils::loadMem(allocator, "../res/shaders/vs_ocornut_imgui.bin"))
+                    , bgfx::createShader(RenderUtils::loadMem(allocator, "../res/shaders/fs_ocornut_imgui.bin"))
                     , true
             );
             u_imageLodEnabled = bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4);
             m_imageProgram = bgfx::createProgram(
-                    bgfx::createShader(loadMem(allocator, "../res/shaders/vs_imgui_image.bin"))
-                    , bgfx::createShader(loadMem(allocator, "../res/shaders/fs_imgui_image.bin"))
+                    bgfx::createShader(RenderUtils::loadMem(allocator, "../res/shaders/vs_imgui_image.bin"))
+                    , bgfx::createShader(RenderUtils::loadMem(allocator, "../res/shaders/fs_imgui_image.bin"))
                     , true
             );
             m_layout
@@ -360,7 +347,7 @@ namespace {
         // render the imgui things using bgfx
         ImGui::Render();
         ImDrawData *drawData = ImGui::GetDrawData();
-        uint32_t viewID = 0;
+        uint32_t viewID = 1;
 
         // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
         int fb_width = (int) (drawData->DisplaySize.x * drawData->FramebufferScale.x);

@@ -224,10 +224,10 @@ namespace {
         }
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);   // important so that window doesn't go black as soon as I move it
         // glfwSwapInterval(1);    //enable vsync
-        // poll events once to see if need to create/destroy some windows
+        // poll events once to see if need to create a window
         Events::pollEvent<WindowCreateEvent>();
         // At this point, the only callback which is subscribed should be
-        // the one in ContextI.cpp constructor (ie window create/distroy)
+        // the one in Context.cpp init() (ie window create/destroy)
         // Therefore user didn't create a window.
         if (GLFWContext::window == nullptr) {
             BIGG_GLFW_LOG_WARN("The context has no windows! Try submitting a WindowCreateEvent");
@@ -238,7 +238,7 @@ namespace {
         // every ~8ms or ~11ms with a bluetooth mouse so that is the most rapidly
         // the game will recieve update events. If the mouse isn't moving, the game
         // will recieve an update event every tick, since the world changes at this
-        // rate, it makes sense.
+        // rate.
         double lastUpdateTime, lastTickTime, timeoutTime, now;
         lastUpdateTime = lastTickTime = now = Profile::now();
         while (GLFWContext::window != nullptr && !glfwWindowShouldClose(GLFWContext::window)) {
@@ -251,13 +251,11 @@ namespace {
             now = Profile::now();
 
             // post an update event
-//        postUpdateEvent(now - lastUpdateTime);
             Events::setEvent<UpdateEvent>(UpdateEvent{now - lastUpdateTime});
             lastUpdateTime = now;
 
                 // post a tick event
             if (now - lastTickTime >= g_tickDeltaTime) {
-//            postTickEvent(now - lastTickTime);
                 Events::setEvent<TickEvent>(TickEvent{now - lastTickTime});
                 lastTickTime = now;
             }
@@ -265,6 +263,8 @@ namespace {
                 // poll context events
             Events::pollEvents();
         }
+        // post a destroy event
+
         BIGG_GLFW_LOG_DEBUG("Terminating GLFWContext...");
 
         glfwTerminate();

@@ -7,6 +7,7 @@
 #include <glm/vec3.hpp>
 
 struct Transform {
+    Transform(glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) : position(pos), rotation(rot), scale(scale) {}
     glm::vec3 position{0, 0, 0};
     glm::vec3 rotation{0, 0, 0};
     glm::vec3 scale{1, 1, 1};

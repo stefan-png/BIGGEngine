@@ -31,7 +31,7 @@ target_link_libraries(linkingtest PRIVATE glm)
 #imgui
 
     # add glfw dep to imgui
-    set(IMGUI_SOURCE thirdparty/imgui/backends/imgui_impl_glfw.cpp thirdparty/imgui/imgui.cpp thirdparty/imgui/imgui_draw.cpp thirdparty/imgui/imgui_demo.cpp thirdparty/imgui/imgui_tables.cpp thirdparty/imgui/imgui_widgets.cpp)
+    set(IMGUI_SOURCE thirdparty/imgui/imgui.cpp thirdparty/imgui/imgui_draw.cpp thirdparty/imgui/imgui_demo.cpp thirdparty/imgui/imgui_tables.cpp thirdparty/imgui/imgui_widgets.cpp)
     add_library(imgui STATIC ${IMGUI_SOURCE})
 
     target_link_libraries(imgui PRIVATE 
@@ -88,9 +88,10 @@ add_library(BIGGEngine SHARED
         src/Events.cpp
         src/NativeWindowHack.mm
         src/Render/RenderBase.cpp
+        src/Render/RenderMeshComponents.cpp
         src/Render/RenderUI.cpp
+        src/Render/RenderUtils.cpp
         src/Script.cpp
-        scripts/LuaLog.cpp
         )
 
 target_include_directories(BIGGEngine PRIVATE
