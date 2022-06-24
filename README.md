@@ -19,7 +19,7 @@ are:
     
 ### Screenshot
 
-![Screenshot](docs/Screen Shot 2022-06-23 at 6.19.18 PM.png)
+![Screenshot](docs/screenshot-2022-06-23.png)
     
     
 ### Building dependencies
