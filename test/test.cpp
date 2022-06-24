@@ -54,6 +54,16 @@ struct App {
         reg.emplace<Mesh>(entity3);
         reg.emplace<Transform>(entity3, glm::vec3{-1, -1.5, 0.0f}, glm::vec3{0, 1, 0}, glm::vec3{0.5, 1, 0.5});
 
+        // TODO make mesh rendering gooder
+        // v1 static loading
+        // global registry of known meshes
+        // - index-able by asset name or path or UUID
+        // - metadata:
+        //     - bgfx::vertexLayout
+        //     - pointer to vertex / index data in heap
+        //     - size?
+        // allocator with some heap size
+
     }
 
     ~App() {

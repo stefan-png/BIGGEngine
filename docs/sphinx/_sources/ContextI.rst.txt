@@ -1,0 +1,28 @@
+.. ContextI documentation file, created by
+   Stefan Antoszko on Sat May  7 2022
+
+ContextI.hpp
+============
+
+Defines
+-------
+
+.. doxygendefine:: EVENT_CALLBACK_FUNC
+
+Interfaces
+----------
+
+.. doxygenstruct:: BIGGEngine::ContextI
+    :members:
+
+Structs
+-------
+
+.. doxygenstruct:: BIGGEngine::Events
+    :members:
+    :undoc-members:
+
+.. doxygengroup:: Events
+    :members:
+    :undoc-members:
+    :content-only:

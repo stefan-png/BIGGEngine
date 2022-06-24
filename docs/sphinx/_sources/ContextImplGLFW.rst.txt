@@ -1,0 +1,13 @@
+.. ContextImplGLFW documentation file, created by
+   Stefan Antoszko on Sat May  7 2022
+
+ContextImplGLFW.hpp
+===================
+
+Structs
+-------
+
+.. doxygenstruct:: BIGGEngine::GLFWContext
+    :members:
+    :undoc-members:
+

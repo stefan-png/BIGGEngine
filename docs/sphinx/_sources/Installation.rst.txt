@@ -1,0 +1,16 @@
+.. ContextI documentation file, created by
+   Stefan Antoszko on Sat May  7 2022
+
+Installation
+============
+
+
+This page will include steps for installing the libary
+
+1. do this
+2. do this after
+3. next...
+4. finally...
+
+And voila! we have a lib.
+

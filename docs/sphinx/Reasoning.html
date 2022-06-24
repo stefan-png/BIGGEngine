@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Reasoning &#8212; BIGGEngine beta 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/mytheme.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Reference" href="Reference.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-inverse navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Home</a>
+        <span class="navbar-text navbar-version pull-left"><b></b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="Installation.html">Installation</a></li>
+                <li><a href="QuickStart.html">Quick Start</a></li>
+                <li><a href="Reference.html">Reference</a></li>
+                <li><a href="http://www.youtube.com">Link</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Table Of Contents <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reasoning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#coding-patterns">Coding Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding-patterns-header-file">Coding Patterns - Header file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding-patterns-anonymous-namespace">Coding Patterns - anonymous namespace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#events-system">Events system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#profile-and-log-static-classes">Profile and Log static classes</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="_sources/Reasoning.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <section id="reasoning">
+<h1>Reasoning<a class="headerlink" href="#reasoning" title="Permalink to this headline">¶</a></h1>
+<section id="coding-patterns">
+<h2>Coding Patterns<a class="headerlink" href="#coding-patterns" title="Permalink to this headline">¶</a></h2>
+<p>In this project, there is a lot of global state. This state must be accessible anywhere,
+but only accessed and manipulated in specific ways. I needed to hide the raw data, and
+expose it only through functions. In other words, I need an <a class="reference external" href="https://en.wikipedia.org/wiki/Interface_(computing)">Interface</a> between the end user
+and the systems I create. The two solutions I used are structs with private
+<code class="docutils literal notranslate"><span class="pre">static</span></code> variables in header files and global variables in an anonymous <code class="docutils literal notranslate"><span class="pre">namespace</span></code> in
+cpp files.</p>
+</section>
+<section id="coding-patterns-header-file">
+<h2>Coding Patterns - Header file<a class="headerlink" href="#coding-patterns-header-file" title="Permalink to this headline">¶</a></h2>
+<p>This pattern is used in places like <code class="docutils literal notranslate"><span class="pre">Log.hpp</span></code>, <code class="docutils literal notranslate"><span class="pre">Profile.hpp</span></code>.</p>
+<p>It is good for things which do not hold a lot of data, and hold mostly functions.
+It does not need to be compiled, so it can be included in every file and it mostly just works.
+It is also good for templated functions, because templates are easier to use when defined in a header file.</p>
+<p>However, using only a header file is not good for larger systems.
+It may cause problems when dynamically linked. (ie. there may be two instances of the same state)
+It becomes more difficult to write larger systems in one single header file.
+Including the file into each subsystem increases compile times for those subsystems. (speculative)</p>
+<p>Example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Profile.hpp</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">Profile</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">Profile</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">delete</span><span class="p">;</span><span class="w"> </span><span class="c1">// cannot instantiate this struct</span>
+
+<span class="k">public</span><span class="o">:</span><span class="w"> </span><span class="c1">// public function to access / manipulate data</span>
+
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">now</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="n">getPlatformTime</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s_offset</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">s_frequency</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="k">private</span><span class="o">:</span><span class="w"> </span><span class="c1">// helper functions</span>
+
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">getPlatformTime</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/* ... */</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">getPlatformFrequency</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/* ... */</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">getPlatformClockID</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/* ... */</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="k">private</span><span class="o">:</span><span class="w"> </span><span class="c1">// private state</span>
+
+<span class="w">    </span><span class="c1">// initialized inline with function so that it can be const. (it doesn&#39;t change over the course of the program)</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">s_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getPlatformTime</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">s_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getPlatformFrequency</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">s_clockid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getPlatformClockID</span><span class="p">();</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="coding-patterns-anonymous-namespace">
+<span id="codingpatternsanonymousnamespace"></span><h2>Coding Patterns - anonymous namespace<a class="headerlink" href="#coding-patterns-anonymous-namespace" title="Permalink to this headline">¶</a></h2>
+<p>This pattern is used in <code class="docutils literal notranslate"><span class="pre">Context.*</span></code>, <code class="docutils literal notranslate"><span class="pre">Events.*</span></code>, <code class="docutils literal notranslate"><span class="pre">RenderBase.*</span></code>, <code class="docutils literal notranslate"><span class="pre">RenderUI.*</span></code>, <code class="docutils literal notranslate"><span class="pre">Script.*</span></code>.</p>
+<p>It is easier to organize systems which are more complex, because things can be separated into a
+header file and a cpp file.
+It only needs to be compiled into a <code class="docutils literal notranslate"><span class="pre">.o</span></code> file once, decreasing compile times for larger systems. (speculative)
+It behaves better when dynamically linked. (I hope)</p>
+<p>In the header file, I declare the functions the user will use to access / manipulate the global data.
+In the cpp file, I define them. I use an anonymous namespace (<code class="docutils literal notranslate"><span class="pre">namespace</span> <span class="pre">{</span> <span class="pre">/*</span> <span class="pre">...</span> <span class="pre">*/</span> <span class="pre">}</span></code>) to declare
+global variables and helper functions. The anonymous namespace makes the variables invisible to other
+translation units, so the user cannot access the data directly.</p>
+<p>This method is sometimes better because there are just functions instead of static member functions.
+This makes it more clear about the purpose of the functions, are reduces the need for ‘manager’ functions.</p>
+<p>Example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// RenderBase.hpp</span>
+<span class="c1">// just declare the public functions</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">init</span><span class="p">();</span><span class="w"></span>
+
+<span class="c1">// RenderBase.cpp</span>
+<span class="k">namespace</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// begin anonymous namespace. Anything defined here is not accessible outside this translation unit.</span>
+
+<span class="w">    </span><span class="c1">// private global state</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">resetFlags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">BGFX_RESET_VSYNC</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">BGFX_RESET_MSAA_X16</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// private helper functions</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">handleWindowCreateEvent</span><span class="p">(</span><span class="n">WindowCreateEvent</span><span class="p">){</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/* ... */</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">handleWindowSizeEvent</span><span class="p">(</span><span class="n">WindowSizeEvent</span><span class="w"> </span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/* ... */</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">handleLateUpdateEvent</span><span class="p">(</span><span class="n">UpdateEvent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/* ... */</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w">   </span><span class="c1">// end anonymous namespace</span>
+
+<span class="c1">// public functions are defined outside</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">init</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">BIGG_PROFILE_INIT_FUNCTION</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">Events</span><span class="o">::</span><span class="n">subscribe</span><span class="o">&lt;</span><span class="n">WindowCreateEvent</span><span class="o">&gt;</span><span class="p">(</span><span class="n">g_renderBaseBeginPriority</span><span class="p">,</span><span class="w"> </span><span class="n">handleWindowCreateEvent</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">Events</span><span class="o">::</span><span class="n">subscribe</span><span class="o">&lt;</span><span class="n">WindowSizeEvent</span><span class="o">&gt;</span><span class="p">(</span><span class="n">g_renderBaseBeginPriority</span><span class="p">,</span><span class="w">   </span><span class="n">handleWindowSizeEvent</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">Events</span><span class="o">::</span><span class="n">subscribe</span><span class="o">&lt;</span><span class="n">UpdateEvent</span><span class="o">&gt;</span><span class="p">(</span><span class="n">g_renderBaseEndPriority</span><span class="p">,</span><span class="w">         </span><span class="n">handleLateUpdateEvent</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="events-system">
+<h2>Events system<a class="headerlink" href="#events-system" title="Permalink to this headline">¶</a></h2>
+<p>The events system is templated to work with any type of event. Therefore,
+there is the following <em>for each event type T:</em></p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">std::map</span></code> ‘callbacks’. The key is an integer, priority, and the value is an EventFunctor of type <code class="docutils literal notranslate"><span class="pre">functor_t</span></code> which by default:</p></li>
+</ul>
+<div class="highlight-c++ notranslate" id="functor-t"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">functor_t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">T</span></code> ‘event’. When an event is published by the window context, it populates this field with the event data. When events are polled, this data is propogated to all the handlers as the argument into <a class="reference internal" href="#functor-t">functor_t</a>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">bool</span></code> ‘handled’.</p></li>
+</ul>
+<p>The interface functions (functions the user can use) for Events are defined in the
+file <code class="docutils literal notranslate"><span class="pre">Events.hpp</span></code>. They include:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Events.hpp</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">subscribe</span><span class="p">(</span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">priority</span><span class="p">,</span><span class="w"> </span><span class="n">functor_t</span><span class="o">&lt;</span><span class="n">Event</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="n">functor</span><span class="p">);</span><span class="w"></span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">unsubscribe</span><span class="p">(</span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">priority</span><span class="p">);</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">setEvent</span><span class="p">(</span><span class="n">Event</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="n">event</span><span class="p">);</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">pollEvent</span><span class="p">();</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">pollEvents</span><span class="p">();</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">reset</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Some events, like <code class="docutils literal notranslate"><span class="pre">WindowSize</span></code>, are both posted by the window context and
+handled by the context. That is, they are both incoming and outgoing
+events. Therefore, their implementation is more complex. The context
+must determine if the polled event was one it just posted or if it is an incoming
+request from the user. It does this by comparing the event’s data to the current state.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// ContextImplGLFW.cpp</span>
+
+<span class="kt">bool</span><span class="w"> </span><span class="nf">GLFWContext::handleWindowSize</span><span class="p">(</span><span class="n">WindowSizeEvent</span><span class="w"> </span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">GLFWContext</span><span class="o">::</span><span class="n">getWindowSize</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">event</span><span class="p">.</span><span class="n">m_size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// window size is equal to current size. This event</span>
+<span class="w">        </span><span class="c1">// was posted by the context last frame.</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// window size is not equal to current size. This</span>
+<span class="w">    </span><span class="c1">// event was posted by the user.</span>
+<span class="w">    </span><span class="n">glfwSetWindowSize</span><span class="p">(</span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="n">event</span><span class="p">.</span><span class="n">m_size</span><span class="p">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">event</span><span class="p">.</span><span class="n">m_size</span><span class="p">.</span><span class="n">y</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>A consequence of this is some events block the main thread (at least on macos).
+For instance, resizing the window freezes the running thread. Since the main
+thread is blocked, no events are polled, but resize events are still
+continuously being queued! Once the user lets go, all the events are handled
+in FIFO order. However, getWindowSize() returns the actual size of the window,
+and the final size of the window will be different than the first <code class="docutils literal notranslate"><span class="pre">resizeEvent</span></code>.
+In <code class="docutils literal notranslate"><span class="pre">handleWindowSize()</span></code>, this would be interpreted as a user request to resize
+the window and the window would be resized, posting an event to the end of the
+queue. This repeats forever, freezing the program.</p>
+<p>One solution is to recursively call <code class="docutils literal notranslate"><span class="pre">pollEvents()</span></code> inside the implementation
+callback. This works, but it might be possible to get a stack overflow error
+if the events are too heavy and they recurse for too long.</p>
+<p>Instead, it would be sufficient to only store one <code class="docutils literal notranslate"><span class="pre">ResizeEvent</span></code> per frame
+and simply reassign it on each event. Then, once the main thread regains
+polling, propogate only one events, the most recent one, to the program.
+With this, the application would only recieve a resize event once the user
+releases the mouse. It may still be necesarry to store many <code class="docutils literal notranslate"><span class="pre">WindowCreate</span></code>
+and <code class="docutils literal notranslate"><span class="pre">WindowDestroy</span></code> events since the user may want to create/WindowDestroy
+many events per frame, and not just the most recent one. Same with all other
+“handle” events which are strictly incoming.</p>
+<p>It is also possible to simply have a <code class="docutils literal notranslate"><span class="pre">createWindow()</span></code>, <code class="docutils literal notranslate"><span class="pre">setWindowSize()</span></code>,
+etc. functions and not deal with all this.</p>
+</section>
+<section id="profile-and-log-static-classes">
+<h2>Profile and Log static classes<a class="headerlink" href="#profile-and-log-static-classes" title="Permalink to this headline">¶</a></h2>
+<p>Both the <code class="docutils literal notranslate"><span class="pre">Profile</span></code> and <code class="docutils literal notranslate"><span class="pre">Log</span></code> classes are entirely static. They have no
+constructor, init, or shutdown functions. They are basically a namespace. Both
+classes are intended to exist for the entire lifespan of the program, therefore
+I didn’t think explicit construction / destruction was necessary. Both classes
+are essentially just a few functions and a bit of constant state. Note: <code class="docutils literal notranslate"><span class="pre">Log.hpp</span></code>
+contains some dynamic state: the name of the logger depends on the implementation.</p>
+<p>The reason these classes are not namespaces is because they have private variables.
+In <code class="docutils literal notranslate"><span class="pre">Log.hpp</span></code>, the individual loggers should be private. My intention is that users
+call the macros <code class="docutils literal notranslate"><span class="pre">BIGG_LOG_xxxx</span></code>, and not the member loggers, but it is possible,
+which isn’t exactly ideal.</p>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2022, Stefan Antoszko.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
