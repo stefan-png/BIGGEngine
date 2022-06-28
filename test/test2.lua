@@ -2,12 +2,6 @@
 
 x = "okay i pull up";    -- shared among all ScriptComponents with name 'test2'
 
-arg = {
-    p = 10,
-    q = false,
-    r = "rarara"
-}
-
 function BIGGEngine.Init()
     BIGGEngine.log("calling BIGGEngine.Init in script '%s'.",BIGGEngine.ScriptName);
 end
@@ -15,7 +9,7 @@ end
 function BIGGEngine.MouseButton(button, action, mods)
     if action == BIGGEngine.ActionEnum.Press then
         if type(x) ~= "number" then
-          x = 1
+          x = 0.9
         end
         x = x + 1.1
         BIGGEngine.log("mouse button %d pressed in script '%s'. x = %.1f", button, BIGGEngine.ScriptName, x);

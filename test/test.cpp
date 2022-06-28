@@ -33,7 +33,7 @@ struct App {
 
         // this should add the script "main" to the registry and run the script once.
         Scripting::registerScript(entt::hashed_string{"test2"}, "../test/test2.lua", 101);
-        Scripting::registerScript(entt::hashed_string{"main"}, "../test/main.lua", 102);
+//        Scripting::registerScript(entt::hashed_string{"main"}, "../test/main.lua", 102);
 
         // TODO instead of registering script, ScriptComponent's constructor should do that
         // automatically.
@@ -42,7 +42,7 @@ struct App {
         const auto entity = reg.create();
         reg.emplace<Mesh>(entity);
         reg.emplace<Transform>(entity, glm::vec3{1, 0.0f, 0.0f}, glm::vec3{0, 0, 0}, glm::vec3{2, 0.5, 0.5});
-        reg.emplace<ScriptComponent>(entity, entt::hashed_string{"main"});
+//        reg.emplace<ScriptComponent>(entity, entt::hashed_string{"main"});
 
         const auto entity2 = reg.create();
         reg.emplace<Mesh>(entity2);
@@ -69,6 +69,7 @@ struct App {
     ~App() {
         RenderUI::shutdown();
         Context::shutdown();
+        ECS::shutdown();
     }
 
     void tick(double delta) {
