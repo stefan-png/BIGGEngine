@@ -3,9 +3,9 @@
 //
 
 // TODO __tostring metamethods for all lua types (Entity, Component, Vector)
-// - add Context functions in lua (getWindowSize, getMousePos, etc)
-// - add rest of Components
-// - add rest of callbacks
+// - add Context functions in lua (getWindowSize, getMousePos, etc) 80%
+// - add rest of Components 0%
+// - add rest of event callbacks 0%
 
 #include "Script.hpp"
 #include "Macros.hpp"
@@ -516,9 +516,9 @@ namespace {
         const VecT* pVec = getVectorHandleArg<VecT>(L);
         lua_Integer index = luaL_checkinteger(L, 2);
 
-        luaL_argcheck(L, index >= 0 && index < VecT::length(), 2, "invalid index");
+        luaL_argcheck(L, index > 0 && index <= VecT::length(), 2, "invalid index");
 
-        lua_pushnumber(L, pVec->operator[](index));
+        lua_pushnumber(L, pVec->operator[](index-1)); // index-1 since lua indices are one higher than c indices.
         return 1;
     }
 
@@ -530,9 +530,9 @@ namespace {
         lua_Integer index = luaL_checkinteger(L, 2);
         lua_Number value  = luaL_checknumber(L, 3);
 
-        luaL_argcheck(L, index >= 0 && index < VecT::length(), 2, "invalid index");
+        luaL_argcheck(L, index > 0 && index <= VecT::length(), 2, "invalid index");
 
-        pVec->operator[](index) = value;
+        pVec->operator[](index-1) = value;
         return 0;
     }
 
@@ -553,10 +553,19 @@ namespace {
 
     /// Pushes a BIGGEngine.VectorHandle<VecT> onto the stack.
     template <typename VecT>
-    void l_newVectorHandle(lua_State* L, VecT* pVec){
-        void* userdata = lua_newuserdatauv(L, 0, 1);
-        lua_pushlightuserdata(L, pVec);
-        lua_setiuservalue(L, -2, 1);
+    void newVectorHandle(lua_State* L, VecT* pVec){
+        if(pVec == nullptr) {
+            // create a new userdata which is really an array. set its user value to itself
+            // so other functions work the same.
+            auto* userdata = static_cast<VecT*>(lua_newuserdatauv(L, sizeof(typename VecT::value_type) * VecT::length(), 1));
+            (*userdata) = VecT(0); // init it to 0.
+            lua_pushlightuserdata(L, userdata);
+            lua_setiuservalue(L, -2, 1);
+        } else {
+            lua_newuserdatauv(L, 0, 1);
+            lua_pushlightuserdata(L, pVec);
+            lua_setiuservalue(L, -2, 1);
+        }
 
         luaL_setmetatable(L, g_vecMTName<VecT>);
     }
@@ -604,11 +613,11 @@ namespace {
         lua_pop(L, 1);
 
         if(isPos) {
-            l_newVectorHandle<vec3h>(L, &pTransform->position);
+            newVectorHandle<vec3h>(L, &pTransform->position);
         } else if(isRot) {
-            l_newVectorHandle<vec3h>(L, &pTransform->rotation);
+            newVectorHandle<vec3h>(L, &pTransform->rotation);
         } {
-            l_newVectorHandle<vec3h>(L, &pTransform->scale);
+            newVectorHandle<vec3h>(L, &pTransform->scale);
         }
         return 1;
     }
@@ -668,6 +677,15 @@ namespace {
         lua_pop(L, 1);
     }
 
+    // ------------ Lua Vector Functions ----------------------
+#include "../scripts/LuaVector.hpp"
+#include "../scripts/LuaVector-inl.hpp"
+
+#include "../scripts/LuaContextFunctions.hpp"
+#include "../scripts/LuaContextFunctions-inl.hpp"
+
+    // ------------ misc lua functions -------------------------
+
     int l_log(lua_State *L) {
         int numArgs = lua_gettop(L);
 
@@ -708,19 +726,51 @@ namespace {
     }
 
     const luaL_Reg BIGGEnginelib[] = {
+
+            // Misc funcs
             {"log", l_log},
-            {g_vecIndexFuncName< vec2h>, l_vectorHandleIndex< vec2h>},       // vec __index
-            {g_vecIndexFuncName<ivec2h>, l_vectorHandleIndex<ivec2h>},       // vec __index
-            {g_vecIndexFuncName< vec3h>, l_vectorHandleIndex< vec3h>},       // vec __index
-            {g_vecIndexFuncName<ivec3h>, l_vectorHandleIndex<ivec3h>},       // vec __index
-            {g_vecNewIndexFuncName< vec2h>, l_vectorHandleNewIndex< vec2h>}, // vec __newindex
-            {g_vecNewIndexFuncName<ivec2h>, l_vectorHandleNewIndex<ivec2h>}, // vec __newindex
-            {g_vecNewIndexFuncName< vec3h>, l_vectorHandleNewIndex< vec3h>}, // vec __newindex
-            {g_vecNewIndexFuncName<ivec3h>, l_vectorHandleNewIndex<ivec3h>}, // vec __newindex
-            {g_vecToStringFuncName< vec2h>, l_vectorHandleToString< vec2h>}, // vec __tostring
-            {g_vecToStringFuncName<ivec2h>, l_vectorHandleToString<ivec2h>}, // vec __tostring
-            {g_vecToStringFuncName< vec3h>, l_vectorHandleToString< vec3h>}, // vec __tostring
-            {g_vecToStringFuncName<ivec3h>, l_vectorHandleToString<ivec3h>}, // vec __tostring
+
+            // Vector Handle Funcs
+            {g_vecIndexFuncName< vec2h>, l_vectorHandleIndex< vec2h>},
+            {g_vecIndexFuncName<ivec2h>, l_vectorHandleIndex<ivec2h>},
+            {g_vecIndexFuncName< vec3h>, l_vectorHandleIndex< vec3h>},
+            {g_vecIndexFuncName<ivec3h>, l_vectorHandleIndex<ivec3h>},
+            {g_vecNewIndexFuncName< vec2h>, l_vectorHandleNewIndex< vec2h>},
+            {g_vecNewIndexFuncName<ivec2h>, l_vectorHandleNewIndex<ivec2h>},
+            {g_vecNewIndexFuncName< vec3h>, l_vectorHandleNewIndex< vec3h>},
+            {g_vecNewIndexFuncName<ivec3h>, l_vectorHandleNewIndex<ivec3h>},
+            {g_vecToStringFuncName< vec2h>, l_vectorHandleToString< vec2h>},
+            {g_vecToStringFuncName<ivec2h>, l_vectorHandleToString<ivec2h>},
+            {g_vecToStringFuncName< vec3h>, l_vectorHandleToString< vec3h>},
+            {g_vecToStringFuncName<ivec3h>, l_vectorHandleToString<ivec3h>},
+
+            // Vector Funcs
+            {g_VectorIndexFuncName, l_VectorIndex},
+            {g_VectorNewIndexFuncName, l_VectorNewIndex},
+            {g_VectorToStringFuncName, l_VectorToString},
+
+            // Context Funcs
+            {g_GetWindowSizeFuncName, l_getWindowSize},
+            {g_GetWindowFramebufferSizeFuncName, l_getWindowFramebufferSize},
+            {g_GetWindowContentScaleFuncName, l_getWindowContentScale},
+            {g_GetWindowPositionFuncName, l_getWindowPosition},
+            {g_GetWindowIconifiedFuncName, l_getWindowIconified},
+            {g_GetWindowMaximizedFuncName, l_getWindowMaximized},
+            {g_GetWindowVisibleFuncName, l_getWindowVisible},
+            {g_GetWindowFocusFuncName, l_getWindowFocus},
+            {g_GetKeyFuncName, l_getKey},
+            {g_GetMousePositionFuncName, l_getMousePosition},
+            {g_GetMouseHoverFuncName, l_getMouseHover},
+            {g_GetMouseButtonFuncName, l_getMouseButton},
+            {g_GetClipboardStringFuncName, l_getClipboardString},
+            {g_SetWindowShouldCloseFuncName, l_setWindowShouldClose},
+            {g_SetWindowSizeLimitsFuncName, l_setWindowSizeLimits},
+            {g_SetWindowAspectRatioFuncName, l_setWindowAspectRatio},
+            {g_SetWindowTitleFuncName, l_setWindowTitle},
+            {g_SetClipboardStringFuncName, l_setClipboardString},
+            {g_SetWindowVisibleFuncName, l_setWindowVisible},
+
+            // Component funcs
             {g_TransformComponentIndexFuncName, l_TransformComponentIndex},
             {g_TransformComponentNewIndexFuncName, l_TransformComponentNewIndex},
             {g_EntityIndexFuncName, l_EntityIndex},
@@ -741,6 +791,7 @@ namespace {
 
         open_TransformComponent(L);
         open_Entity(L);
+        open_VectorMT(L);
 
         return 1;
     }

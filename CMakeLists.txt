@@ -92,7 +92,7 @@ add_library(BIGGEngine SHARED
         src/Render/RenderUI.cpp
         src/Render/RenderUtils.cpp
         src/Script.cpp
-        src/Macros.hpp)
+        )
 
 target_include_directories(BIGGEngine PRIVATE
         thirdparty/spdlog/include 
