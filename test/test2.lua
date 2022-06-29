@@ -10,6 +10,7 @@ function BIGGEngine.MouseButton(button, action, mods)
     if action == BIGGEngine.ActionEnum.Press then
         if type(x) ~= "number" then
           x = 0.9
+            BIGGEngine.log("this.transform.position is %s", this.transform.position)
         end
         x = x + 1.1
         BIGGEngine.log("mouse button %d pressed in script '%s'. x = %.1f", button, BIGGEngine.ScriptName, x);

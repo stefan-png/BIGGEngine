@@ -1,7 +1,14 @@
 //
 // Created by Stefan Antoszko on 2022-05-27.
 //
+
+// TODO __tostring metamethods for all lua types (Entity, Component, Vector)
+// - add Context functions in lua (getWindowSize, getMousePos, etc)
+// - add rest of Components
+// - add rest of callbacks
+
 #include "Script.hpp"
+#include "Macros.hpp"
 
 #define BIGG_PROFILE_SCRIPT_FUNCTION            _BIGG_PROFILE_CATEGORY_FUNCTION("script")
 #define BIGG_PROFILE_SCRIPT_SCOPE(_format, ...) _BIGG_PROFILE_CATEGORY_SCOPE("script", _format, ##__VA_ARGS__)
@@ -122,7 +129,7 @@ namespace {
 
     // Library things
 
-    // all the open_XxxEnum functions expect a stack with table 'BIGGEngine' at the top.
+    // all the open_Xxx functions expect a stack with table 'BIGGEngine' at the top.
     void open_MouseButtonEnum(lua_State* L) {
         lua_createtable(L, 0, 11);      // create table MouseButtonEnum
 
@@ -435,6 +442,232 @@ namespace {
 
     }
 
+    using vec2h = glm::vec2;
+    using ivec2h = glm::ivec2;
+    using vec3h = glm::vec3;
+    using ivec3h = glm::ivec3;
+
+    template <typename T>
+    const char* g_vecMTName;
+    template <> const char* g_vecMTName< vec2h> = "BIGGEngine.Vec2Handle";
+    template <> const char* g_vecMTName<ivec2h> = "BIGGEngine.IVec2Handle";
+    template <> const char* g_vecMTName< vec3h> = "BIGGEngine.Vec3Handle";
+    template <> const char* g_vecMTName<ivec3h> = "BIGGEngine.IVec3Handle";
+
+    template <typename T>
+    const char* g_vecIndexFuncName;
+    template <> const char* g_vecIndexFuncName< vec2h> =  "Vec2HandleIndex";
+    template <> const char* g_vecIndexFuncName<ivec2h> = "IVec2HandleIndex";
+    template <> const char* g_vecIndexFuncName< vec3h> =  "Vec3HandleIndex";
+    template <> const char* g_vecIndexFuncName<ivec3h> = "IVec3HandleIndex";
+
+    template <typename T>
+    const char* g_vecNewIndexFuncName;
+    template <> const char* g_vecNewIndexFuncName< vec2h> =  "Vec2HandleNewIndex";
+    template <> const char* g_vecNewIndexFuncName<ivec2h> = "IVec2HandleNewIndex";
+    template <> const char* g_vecNewIndexFuncName< vec3h> =  "Vec3HandleNewIndex";
+    template <> const char* g_vecNewIndexFuncName<ivec3h> = "IVec3HandleNewIndex";
+
+    template <typename T>
+    const char* g_vecToStringFuncName;
+    template <> const char* g_vecToStringFuncName< vec2h> =  "Vec2HandleToString";
+    template <> const char* g_vecToStringFuncName<ivec2h> = "IVec2HandleToString";
+    template <> const char* g_vecToStringFuncName< vec3h> =  "Vec3HandleToString";
+    template <> const char* g_vecToStringFuncName<ivec3h> = "IVec3HandleToString";
+
+    const char* g_EntityMTName = "BIGGEngine.Entity";
+    const char* g_EntityIndexFuncName = "EntityIndex";
+    const char* g_EntityToStringFuncName = "EntityToString";
+
+    const char* g_TransformComponentMTName = "BIGGEngine.TransformComponent";
+    const char* g_TransformComponentIndexFuncName = "TransformComponentIndex";
+    const char* g_TransformComponentNewIndexFuncName = "TransformComponentNewIndex";
+    const char* g_TransformComponentToStringFuncName = "TransformComponentToString";
+
+
+    /// Leaves lua Stack unchanged.
+    /// May throw a lua error if the first argument is not a vector handle.
+    /// @returns a vector pointer.
+    template <typename VecT>
+    VecT* getVectorHandleArg(lua_State* L) {
+
+        void* userdata = luaL_checkudata(L, 1, g_vecMTName<VecT>);
+        luaL_argcheck(L, userdata != nullptr, 1, "vector handle expected");
+
+        lua_getiuservalue(L, 1, 1); // pushes entity onto stack
+        auto* pVec = static_cast<VecT*>(lua_touserdata(L, -1));
+        lua_pop(L, 1);
+
+        return pVec;
+    }
+
+    /// Leaves lua Stack unchanged.
+    /// May throw a lua error with message @p errorMsg if the @p argIndex argument is not a valid lua string.
+    const char* getStringArg(lua_State* L, int argIndex, const char* errorMsg = "valid string expected") {
+        const char* s = luaL_checkstring(L, argIndex);
+        luaL_argcheck(L, s != nullptr, argIndex, errorMsg);
+        return s;
+    }
+
+    /// May throw a lua error if the first argument is not a vector handle or if second argument
+    /// is an invalid index.
+    template <typename VecT>
+    int l_vectorHandleIndex(lua_State* L) {
+        const VecT* pVec = getVectorHandleArg<VecT>(L);
+        lua_Integer index = luaL_checkinteger(L, 2);
+
+        luaL_argcheck(L, index >= 0 && index < VecT::length(), 2, "invalid index");
+
+        lua_pushnumber(L, pVec->operator[](index));
+        return 1;
+    }
+
+    /// May throw a lua error if the first argument is not a vector handle or if second argument
+    /// is an invalid index.
+    template <typename VecT>
+    int l_vectorHandleNewIndex(lua_State* L) {
+        VecT* pVec  = getVectorHandleArg<VecT>(L);
+        lua_Integer index = luaL_checkinteger(L, 2);
+        lua_Number value  = luaL_checknumber(L, 3);
+
+        luaL_argcheck(L, index >= 0 && index < VecT::length(), 2, "invalid index");
+
+        pVec->operator[](index) = value;
+        return 0;
+    }
+
+    template<typename VecT>
+    int l_vectorHandleToString(lua_State* L) {
+        VecT* pVec = getVectorHandleArg<VecT>(L);
+
+        std::string s;
+        if(VecT::length() == 2) {
+            s = fmt::format("({:.3f}, {:.3f})", pVec->x, pVec->y);
+        } else if(VecT::length() == 3) {
+            s = fmt::format("({:.3f}, {:.3f}, {:.3f})", pVec->x, pVec->y, (*pVec)[2]);
+        }
+        lua_pushstring(L, s.c_str());
+        return 1;
+    }
+
+
+    /// Pushes a BIGGEngine.VectorHandle<VecT> onto the stack.
+    template <typename VecT>
+    void l_newVectorHandle(lua_State* L, VecT* pVec){
+        void* userdata = lua_newuserdatauv(L, 0, 1);
+        lua_pushlightuserdata(L, pVec);
+        lua_setiuservalue(L, -2, 1);
+
+        luaL_setmetatable(L, g_vecMTName<VecT>);
+    }
+
+    /// Registers metatable BIGGEngine.[x]Vector[y]Handle. Leaves lua stack unchanged.
+    /// where [x] is optionally @p I for integer and [y] is @p 2 or @p 3.
+    /// Expects a stack with table 'BIGGEngine' at the top.
+    template<typename VecT>
+    void open_VectorHandle(lua_State* L) {
+        luaL_newmetatable(L, g_vecMTName<VecT>);
+        lua_getfield(L,-2, g_vecIndexFuncName<VecT>); // push function BIGGEngine.VecIndex to top
+        lua_setfield(L, -2, "__index"); // set mt.__index = BIGGEngine.VecIndex
+
+        lua_getfield(L, -2, g_vecNewIndexFuncName<VecT>);
+        lua_setfield(L, -2, "__newindex");
+
+        lua_getfield(L, -2, g_vecToStringFuncName<VecT>);
+        lua_setfield(L, -2, "__tostring");
+
+        lua_pop(L, 1); // pop metatable Vec3Handle
+    }
+
+    /// Pushes a BIGGEngine.TransformComponent onto the stack.
+    void newTransformComponent(lua_State* L, Transform* pTransform){
+        void* userdata = lua_newuserdatauv(L, 0, 1);
+        lua_pushlightuserdata(L, pTransform);
+        lua_setiuservalue(L, -2, 1);
+
+        luaL_setmetatable(L, g_TransformComponentMTName);
+    }
+
+    int l_TransformComponentIndex(lua_State* L) {
+        void* userdata = luaL_checkudata(L, 1, g_TransformComponentMTName);
+        const char* key = luaL_checkstring(L, 2);
+
+        luaL_argcheck(L, userdata != nullptr, 1, "transform component expected");
+
+        bool isPos = strcmp("position", key) == 0;
+        bool isRot = strcmp("rotation", key) == 0;
+        bool isScale = strcmp("scale", key) == 0;
+        luaL_argcheck(L, isPos || isRot || isScale, 2, "'position' or 'rotation' or 'scale' expected");
+
+        lua_getiuservalue(L, 1, 1); // pushes entity onto stack
+        auto* pTransform = static_cast<Transform*>(lua_touserdata(L, -1));
+        lua_pop(L, 1);
+
+        if(isPos) {
+            l_newVectorHandle<vec3h>(L, &pTransform->position);
+        } else if(isRot) {
+            l_newVectorHandle<vec3h>(L, &pTransform->rotation);
+        } {
+            l_newVectorHandle<vec3h>(L, &pTransform->scale);
+        }
+        return 1;
+    }
+
+    int l_TransformComponentNewIndex(lua_State* L) {
+        /// take in a table with members x, y, z. or [0], [1], [2]
+        return 0;
+    }
+
+    /// Expects a stack with table 'BIGGEngine' at the top.
+    void open_TransformComponent(lua_State* L) {
+        luaL_newmetatable(L, g_TransformComponentMTName);
+        // set __index
+        lua_getfield(L, -2, g_TransformComponentIndexFuncName);
+        lua_setfield(L, -2, "__index");
+        // set __newindex
+        lua_getfield(L, -2, g_TransformComponentNewIndexFuncName);
+        lua_setfield(L, -2, "__newindex");
+
+        lua_pop(L, 1);
+    }
+
+    /// Pushes a BIGGEngine.TransformComponent onto the stack.
+    void l_newEntity(lua_State* L, entt::entity entity){
+        void* userdata = (lua_newuserdatauv(L, 0, 1));
+        lua_pushinteger(L, static_cast<lua_Integer>(entity));
+        lua_setiuservalue(L, -2, 1);
+
+        luaL_setmetatable(L, g_EntityMTName);
+    }
+
+    int l_EntityIndex(lua_State* L) {
+        void* userdata = (luaL_checkudata(L, 1, g_EntityMTName));
+        const char* key = luaL_checkstring(L, 2);
+
+        luaL_argcheck(L, userdata != nullptr, 1, "entity expected");
+
+        bool isTransform = strcmp("transform", key) == 0;
+        luaL_argcheck(L, isTransform, 2, "'transform' expected");
+
+        lua_getiuservalue(L, 1, 1); // pushes entity onto stack
+        entt::entity entity = static_cast<entt::entity>(lua_tointeger(L, -1));
+        lua_pop(L, 1);
+
+        if(isTransform) {
+            newTransformComponent(L, &ECS::get().get<Transform>(entity));
+        }
+        return 1;
+    }
+
+    /// Expects a stack with table 'BIGGEngine' at the top.
+    void open_Entity(lua_State* L) {
+        luaL_newmetatable(L, g_EntityMTName);
+        // set __index
+        lua_getfield(L, -2, g_EntityIndexFuncName);
+        lua_setfield(L, -2, "__index");
+        lua_pop(L, 1);
+    }
+
     int l_log(lua_State *L) {
         int numArgs = lua_gettop(L);
 
@@ -476,6 +709,21 @@ namespace {
 
     const luaL_Reg BIGGEnginelib[] = {
             {"log", l_log},
+            {g_vecIndexFuncName< vec2h>, l_vectorHandleIndex< vec2h>},       // vec __index
+            {g_vecIndexFuncName<ivec2h>, l_vectorHandleIndex<ivec2h>},       // vec __index
+            {g_vecIndexFuncName< vec3h>, l_vectorHandleIndex< vec3h>},       // vec __index
+            {g_vecIndexFuncName<ivec3h>, l_vectorHandleIndex<ivec3h>},       // vec __index
+            {g_vecNewIndexFuncName< vec2h>, l_vectorHandleNewIndex< vec2h>}, // vec __newindex
+            {g_vecNewIndexFuncName<ivec2h>, l_vectorHandleNewIndex<ivec2h>}, // vec __newindex
+            {g_vecNewIndexFuncName< vec3h>, l_vectorHandleNewIndex< vec3h>}, // vec __newindex
+            {g_vecNewIndexFuncName<ivec3h>, l_vectorHandleNewIndex<ivec3h>}, // vec __newindex
+            {g_vecToStringFuncName< vec2h>, l_vectorHandleToString< vec2h>}, // vec __tostring
+            {g_vecToStringFuncName<ivec2h>, l_vectorHandleToString<ivec2h>}, // vec __tostring
+            {g_vecToStringFuncName< vec3h>, l_vectorHandleToString< vec3h>}, // vec __tostring
+            {g_vecToStringFuncName<ivec3h>, l_vectorHandleToString<ivec3h>}, // vec __tostring
+            {g_TransformComponentIndexFuncName, l_TransformComponentIndex},
+            {g_TransformComponentNewIndexFuncName, l_TransformComponentNewIndex},
+            {g_EntityIndexFuncName, l_EntityIndex},
             {nullptr, nullptr},
     };
 
@@ -485,6 +733,15 @@ namespace {
         open_ActionEnum(L);
         open_ModsEnum(L);
         open_MouseButtonEnum(L);
+
+        open_VectorHandle< vec2h>(L);
+        open_VectorHandle<ivec2h>(L);
+        open_VectorHandle< vec3h>(L);
+        open_VectorHandle<ivec3h>(L);
+
+        open_TransformComponent(L);
+        open_Entity(L);
+
         return 1;
     }
 
@@ -651,7 +908,9 @@ namespace {
                     // Omit all scripts with a different name
                     if(scriptComponent.m_name != name.value()) continue;
 
-                    // TODO load 'this' entity handle userdata
+                    // load 'this' entity handle userdata
+                    l_newEntity(m_luaState, entity);
+                    lua_setglobal(m_luaState,"this");
 
                     // load saved globals
                     lua_rawgetp(m_luaState, LUA_REGISTRYINDEX, (void*)&scriptComponent);
@@ -688,11 +947,11 @@ namespace {
                     lua_rawsetp(m_luaState, LUA_REGISTRYINDEX, (void*)&scriptComponent); // key is light userdata of this ScriptComponent
                     lua_pop(m_luaState, 1);
 
-                    if(event.m_action == BIGGEngine::ActionEnum::Press) {
-                        lua_rawgetp(m_luaState, LUA_REGISTRYINDEX, (void *) &scriptComponent);
-                        printTable(m_luaState, -1);
-                        lua_pop(m_luaState, 1);
-                    }
+//                    if(event.m_action == BIGGEngine::ActionEnum::Press) {
+//                        lua_rawgetp(m_luaState, LUA_REGISTRYINDEX, (void *) &scriptComponent);
+//                        printTable(m_luaState, -1);
+//                        lua_pop(m_luaState, 1);
+//                    }
 
                     if(ret) return true;    // only the first instance of this script will be ran.
                 }
@@ -738,10 +997,6 @@ namespace {
         lua_pushglobaltable(L);
         copyTableShallow(L, -1);
         lua_rawsetp(L, LUA_REGISTRYINDEX, (void*)this); // key is light userdata of this ScriptComponent
-        lua_pop(L, 1);
-
-        lua_rawgetp(L, LUA_REGISTRYINDEX, (void*)this);
-        printTable(L, -1);
         lua_pop(L, 1);
     }
 

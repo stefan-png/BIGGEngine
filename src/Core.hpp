@@ -16,3 +16,4 @@
 #include "InputEnums.hpp"
 #include "Log.hpp"
 #include "Profile.hpp"
+#include "Macros.hpp"
