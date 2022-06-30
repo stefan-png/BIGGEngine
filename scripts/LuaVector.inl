@@ -1,6 +1,5 @@
 #pragma once
 
-#include "LuaVector.hpp"
 #include <fmt/format.h>
 
 void open_VectorMT(lua_State* L) {

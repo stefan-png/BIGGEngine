@@ -9,6 +9,7 @@ end
 function BIGGEngine.MouseButton(button, action, mods)
     if action == BIGGEngine.ActionEnum.Press then
         BIGGEngine.log("transform.pos is %s mousepos is %s and windowsize is %s", this.transform.position, BIGGEngine.getMousePosition(), BIGGEngine.getWindowSize());
+        BIGGEngine.setClipboardString(BIGGEngine.ScriptName);
     end
     return false
 end

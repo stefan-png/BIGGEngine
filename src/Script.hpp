@@ -19,16 +19,21 @@
 namespace BIGGEngine {
 namespace Scripting {
 
-    void init();
-    void shutdown();
-    void registerScript(entt::hashed_string name, std::string_view filepath, uint16_t subscribePriority);
+void init();
+
+void shutdown();
+
+void registerScript(entt::hashed_string name, std::string_view filepath, uint16_t subscribePriority);
 
 }   // namespace Scripting
 
-    struct ScriptComponent {
-        explicit ScriptComponent(entt::hashed_string::hash_type name);
-        ~ScriptComponent();
+struct ScriptComponent {
+    explicit ScriptComponent(entt::hashed_string::hash_type name);
 
-        entt::hashed_string::hash_type m_name;
-    };
+    ~ScriptComponent();
+
+    entt::hashed_string::hash_type m_name;
+
+};
+
 }; // namespace BIGGEngine
