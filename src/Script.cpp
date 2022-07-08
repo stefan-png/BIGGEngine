@@ -283,9 +283,9 @@ const char* g_EntityMTName = "BIGGEngine.Entity";
 const char* g_EntityIndexFuncName = "EntityIndex";
 const char* g_EntityToStringFuncName = "EntityToString";
 
-/// Pushes a BIGGEngine.TransformComponent onto the stack.
-void l_newEntity(lua_State* L, entt::entity entity) {
-    void* userdata = (lua_newuserdatauv(L, 0, 1));
+/// Pushes a Entity onto the stack.
+void newEntity(lua_State* L, entt::entity entity) {
+    lua_newuserdatauv(L, 0, 1);
     lua_pushinteger(L, static_cast<lua_Integer>(entity));
     lua_setiuservalue(L, -2, 1);
 
@@ -478,6 +478,81 @@ void loadTableShallow(lua_State* L, int srcIndex, int destIndex) {
     }
 }
 
+/// set key-value pairs from table at @p srcIndex to table at @p destIndex.
+/// any key-value pairs from @p destIndex not in @p src index are ignored.
+/// will recurse on nested tables. Keys cannot be a table, only values.
+void loadTableDeepRecursive(lua_State* L, int srcIndex, int destIndex) {
+    if(!lua_istable(L, srcIndex) || !lua_istable(L, destIndex)) {
+        // any POD is copied by value. any userdata, threads, or functions are copied by reference.
+        return;
+    }
+    srcIndex = lua_absindex(L, srcIndex);
+    destIndex = lua_absindex(L, destIndex);
+    lua_pushnil(L);  // first key
+    while(lua_next(L, srcIndex) != 0) {
+        lua_pushvalue(L, -2);     // stack looks like -3 = key, -2 = value, -1 = key
+        lua_insert(L, -2);        // stack looks like -3 = key, -2 = key, -1 = value
+
+        if(lua_istable(L, -1)) { // if value is a subtable
+
+            lua_pushvalue(L, -2);      // stack looks like -1 = key
+            lua_rawget(L, destIndex);      // stack looks like -1 = result
+
+            if(!lua_istable(L, -1)) {  // if nil or non-table, replace the old value with a new table
+                lua_pop(L, 1);
+                lua_newtable(L);
+            }
+            loadTableDeepRecursive(L, -2, -1); // RECURSE!
+
+            lua_remove(L, -2); // remove the src subtable
+        }
+
+        lua_rawset(L, destIndex); // removes 2 objects, leaving 1 key for next call to lua_next().
+    }
+}
+
+/// Pushes onto the stack a copy a lua table. Ignores metatables.
+/// Only copies non-default data (ie. default libs, functions, etc.)
+/// @param srcIndex is the stack index of the source lua table
+void copyTableDeepRecursive(lua_State* L, int srcIndex) {
+    if(!lua_istable(L, srcIndex)) {
+        // any POD is copied by value. any userdata, threads, or functions are copied by reference.
+        lua_pushvalue(L, srcIndex);
+        return;
+    }
+    srcIndex = lua_absindex(L, srcIndex);
+    lua_newtable(L);
+    int outputIndex = lua_absindex(L, -1);
+
+    lua_pushnil(L);  // first key
+    while(lua_next(L, srcIndex) != 0) {
+        if(lua_isstring(L, -2)) {
+            if(isDefaultName(luaL_checkstring(L, -2))) {
+                lua_pop(L, 1);
+                continue;
+            }
+        }
+        lua_pushvalue(L, -2);     // stack looks like -3 = key, -2 = value, -1 = key
+        lua_insert(L, -2);        // stack looks like -3 = key, -2 = key, -1 = value
+
+        if(lua_istable(L, -1)) { // if value is a subtable
+
+            lua_pushvalue(L, -2);      // stack looks like -1 = key
+            lua_rawget(L, outputIndex);      // stack looks like -1 = result
+
+            if(!lua_istable(L, -1)) {  // if nil or non-table, replace the old value with a new table
+                lua_pop(L, 1);
+                lua_newtable(L);
+            }
+            loadTableDeepRecursive(L, -2, -1); // RECURSE!
+
+            lua_remove(L, -2); // remove the src subtable
+        }
+
+        lua_rawset(L, outputIndex); // removes 2 objects, leaving 1 key for next call to lua_next().
+    }
+}
+
 /// prints a lua table at stack position @p tableIndex to std::out
 /// @param tableIdx is the stack index of the table to print
 /// @param _depth is for internal use only
@@ -572,13 +647,85 @@ ScriptHandle::ScriptHandle(entt::hashed_string name, std::string_view filepath, 
 
     lua_getglobal(m_luaState, "BIGGEngine");
     lua_getfield(m_luaState, -1, "Init");
-    if(!lua_isfunction(m_luaState, -1)) {
-        BIGG_LOG_WARN("no Init function detected for script '{}'.", name);
-        lua_pop(m_luaState, 2); // pop BIGGEngine, Init
-        return;
+    if(lua_isfunction(m_luaState, -1)) {
+        CHECK_LUA(m_luaState, lua_pcall(m_luaState, 0, 0, 0)); // call Init
+    } else {
+        BIGG_LOG_WARN("no init function found for script {}", name.data());
+        lua_pop(m_luaState, 1);
     }
 
-    CHECK_LUA(m_luaState, lua_pcall(m_luaState, 0, 0, 0)); // call Init
+    lua_getfield(m_luaState, -1, "WindowCreate");
+    if(lua_isfunction(m_luaState, -1)) {
+        // setup callback
+        auto callback = [=](WindowCreateEvent event) -> bool {   // captures this.m_luaState and name
+            _BIGG_PROFILE_CATEGORY_SCOPE("script", "callback");
+
+            lua_getglobal(m_luaState, "BIGGEngine");
+            BIGG_ASSERT(lua_istable(m_luaState, -1), "BIGGEngine is not a table! '{}'", name.data());
+
+            // for each ScriptComponent
+            auto& registry = ECS::get();
+            auto view = registry.view<ScriptComponent>();
+            for(auto[entity, scriptComponent] : view.each()) {
+
+                // Omit all scripts with a different name
+                if(scriptComponent.m_name != name.value()) continue;
+
+                // load saved globals
+                lua_rawgetp(m_luaState, LUA_REGISTRYINDEX, (void*)&scriptComponent);
+                lua_rawgeti(m_luaState, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+                loadTableDeepRecursive(m_luaState, -2, -1);
+                lua_pop(m_luaState, 2);
+
+                // load 'this' entity handle userdata
+                lua_getglobal(m_luaState, "this");
+                if(lua_isnoneornil(m_luaState, -1)) {
+                    newEntity(m_luaState, entity);
+                    lua_setglobal(m_luaState, "this");
+                } else {
+                    lua_pushinteger(m_luaState, static_cast<lua_Integer>(entity));
+                    lua_setiuservalue(m_luaState, -2, 1);
+                }
+                lua_pop(m_luaState, 1);
+
+                // get function callback
+                lua_getfield(m_luaState, -1, "WindowCreate");
+                BIGG_ASSERT(lua_isfunction(m_luaState, -1), "WindowCreate is not a function! '{}'", name.data());
+
+                // call lua function
+                if(lua_pcall(m_luaState, 0, 1, 0)) { // pops args and function from stack
+                    lua_error(m_luaState);
+                    return false;
+                }
+                // get return value
+                bool ret = false;
+                if(!lua_isboolean(m_luaState, -1)) {
+                    // error! should have returned a bool!
+                    BIGG_LOG_WARN("lua BIGGEngine.WindowCreate didn't return a bool!");
+                }
+                ret = lua_toboolean(m_luaState, -1);
+                lua_pop(m_luaState, 1); // pop the return value from the stack
+
+                // save globals
+                lua_pushglobaltable(m_luaState);
+                printTable(m_luaState, -1);
+                copyTableDeepRecursive(m_luaState, -1);
+                lua_rawsetp(m_luaState, LUA_REGISTRYINDEX,
+                            (void*)&scriptComponent); // key is light userdata of this ScriptComponent
+                lua_pop(m_luaState, 1);
+
+                if(ret) return true;    // only the first instance of this script will be ran.
+            }
+
+            lua_pop(m_luaState, 1); // pop table BIGGEngine
+            return false;
+        };
+        Events::subscribe<WindowCreateEvent>(subscribePriority, callback);
+
+        lua_pop(m_luaState, 1); // pop WindowCreate
+    } else {
+        lua_pop(m_luaState, 1); // pop the nil
+    }
 
     lua_getfield(m_luaState, -1, "MouseButton");
     if(lua_isfunction(m_luaState, -1)) {
@@ -597,15 +744,22 @@ ScriptHandle::ScriptHandle(entt::hashed_string name, std::string_view filepath, 
                 // Omit all scripts with a different name
                 if(scriptComponent.m_name != name.value()) continue;
 
-                // load 'this' entity handle userdata
-                l_newEntity(m_luaState, entity);
-                lua_setglobal(m_luaState, "this");
-
                 // load saved globals
                 lua_rawgetp(m_luaState, LUA_REGISTRYINDEX, (void*)&scriptComponent);
                 lua_rawgeti(m_luaState, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
-                loadTableShallow(m_luaState, -2, -1);
+                loadTableDeepRecursive(m_luaState, -2, -1);
                 lua_pop(m_luaState, 2);
+
+                // load 'this' entity handle userdata
+                lua_getglobal(m_luaState, "this");
+                if(lua_isnoneornil(m_luaState, -1)) {
+                    newEntity(m_luaState, entity);
+                    lua_setglobal(m_luaState, "this");
+                } else {
+                    lua_pushinteger(m_luaState, static_cast<lua_Integer>(entity));
+                    lua_setiuservalue(m_luaState, -2, 1);
+                }
+                lua_pop(m_luaState, 1);
 
                 // get function callback
                 lua_getfield(m_luaState, -1, "MouseButton");
@@ -632,16 +786,10 @@ ScriptHandle::ScriptHandle(entt::hashed_string name, std::string_view filepath, 
 
                 // save globals
                 lua_pushglobaltable(m_luaState);
-                copyTableShallow(m_luaState, -1);
+                copyTableDeepRecursive(m_luaState, -1);
                 lua_rawsetp(m_luaState, LUA_REGISTRYINDEX,
                             (void*)&scriptComponent); // key is light userdata of this ScriptComponent
                 lua_pop(m_luaState, 1);
-
-//                    if(event.m_action == BIGGEngine::ActionEnum::Press) {
-//                        lua_rawgetp(m_luaState, LUA_REGISTRYINDEX, (void *) &scriptComponent);
-//                        printTable(m_luaState, -1);
-//                        lua_pop(m_luaState, 1);
-//                    }
 
                 if(ret) return true;    // only the first instance of this script will be ran.
             }
@@ -652,6 +800,8 @@ ScriptHandle::ScriptHandle(entt::hashed_string name, std::string_view filepath, 
         Events::subscribe<MouseButtonEvent>(subscribePriority, callback);
 
         lua_pop(m_luaState, 1); // pop MouseButton
+    } else {
+        lua_pop(m_luaState, 1); // pop the nil
     }
 
     // TODO repeat for all other callbacks

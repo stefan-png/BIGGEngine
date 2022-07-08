@@ -12,6 +12,9 @@
 #include <vector>
 #include <map>
 
+// TODO REPLACE WITH entt::emitter
+// https://github.com/skypjack/entt/blob/master/docs/md/signal.md
+
 template<typename T>
 using functor_t = std::function<bool(T)>;
 

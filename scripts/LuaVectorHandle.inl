@@ -4,6 +4,13 @@
 
 #pragma once
 
+// Vector MT and VectorHandle MT.
+// myvec = this.transform.position + {0, 1, 2}
+// adding a vector handle + vector = vector
+// adding a vector handle + vectorHandle = vector
+// adding a vector handle + temporary table = vector
+// adding a handle + temporary table = vector
+
 /// Leaves lua Stack unchanged.
 /// May throw a lua error if the first argument is not a vector handle.
 /// @returns a vector pointer.

@@ -79,3 +79,5 @@ clean Cmake files: `cmake --build build/ --target clean`
 # NOTES
 
 See bgfx/tools/geometryv fragment shader for a spherical harmonics shader impl
+
+Run `git ls-files | grep -Ev 'thirdparty|res|docs|shaders' | xargs wc -l` for LOC count
